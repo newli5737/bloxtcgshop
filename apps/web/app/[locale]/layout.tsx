@@ -1,3 +1,4 @@
+import { headers } from "next/headers";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, setRequestLocale } from "next-intl/server";
 import type { ReactElement } from "react";
@@ -18,6 +19,18 @@ export default async function LocaleLayout({ children, params }: Props): Promise
   const { locale } = params;
   setRequestLocale(locale);
   const messages = await getMessages();
+
+  const headersList = headers();
+  const pathname = headersList.get("x-next-url") ?? headersList.get("x-invoke-path") ?? "";
+  const isAdmin = pathname.includes("/admin");
+
+  if (isAdmin) {
+    return (
+      <NextIntlClientProvider messages={messages}>
+        {children}
+      </NextIntlClientProvider>
+    );
+  }
 
   return (
     <NextIntlClientProvider messages={messages}>
