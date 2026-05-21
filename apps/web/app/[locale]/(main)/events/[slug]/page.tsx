@@ -25,13 +25,63 @@ type Registration = {
 
 type AuthUser = { id: string; email: string; name: string | null; role: string };
 
-const statusLabels: Record<string, string> = {
-  UPCOMING: "Coming Soon", OPEN: "Open", CLOSED: "Closed", DRAWN: "Drawn", CANCELLED: "Cancelled",
+const i18n: Record<string, Record<string, string>> = {
+  ja: {
+    events: "イベント",
+    prize: "🎁 賞品",
+    winningNumber: "🏆 当選番号",
+    loginPrompt: "ログインして参加しましょう",
+    loginBtn: "ログイン",
+    registered: "✅ 登録済み",
+    luckyNumber: "あなたのラッキーナンバー",
+    youWon: "🏆 おめでとうございます！当選しました！ 🏆",
+    joinPrompt: "参加してラッキーナンバーをゲット！",
+    joinBtn: "🎲 参加する",
+    joining: "登録中...",
+    closed: "このイベントは受付終了しました",
+    upcoming: "近日公開", open: "受付中", closedStatus: "終了", drawn: "抽選済み", cancelled: "中止",
+  },
+  en: {
+    events: "Events",
+    prize: "🎁 Prize",
+    winningNumber: "🏆 Winning Number",
+    loginPrompt: "Login to participate in this event",
+    loginBtn: "Login",
+    registered: "✅ Registered",
+    luckyNumber: "Your lucky number",
+    youWon: "🏆 Congratulations! You won! 🏆",
+    joinPrompt: "Join the event and get your lucky number!",
+    joinBtn: "🎲 Join Event",
+    joining: "Joining...",
+    closed: "This event is not open for registration",
+    upcoming: "Coming Soon", open: "Open", closedStatus: "Closed", drawn: "Drawn", cancelled: "Cancelled",
+  },
+  vi: {
+    events: "Sự kiện",
+    prize: "🎁 Giải thưởng",
+    winningNumber: "🏆 Số trúng thưởng",
+    loginPrompt: "Đăng nhập để tham gia sự kiện",
+    loginBtn: "Đăng nhập",
+    registered: "✅ Đã đăng ký",
+    luckyNumber: "Số may mắn của bạn",
+    youWon: "🏆 Chúc mừng! Bạn đã thắng! 🏆",
+    joinPrompt: "Tham gia để nhận số may mắn!",
+    joinBtn: "🎲 Tham gia",
+    joining: "Đang đăng ký...",
+    closed: "Sự kiện này đã đóng đăng ký",
+    upcoming: "Sắp diễn ra", open: "Đang mở", closedStatus: "Đã đóng", drawn: "Đã quay", cancelled: "Đã hủy",
+  },
+};
+
+const statusKeyMap: Record<string, string> = {
+  UPCOMING: "upcoming", OPEN: "open", CLOSED: "closedStatus", DRAWN: "drawn", CANCELLED: "cancelled",
 };
 
 export default function EventDetailPage(): ReactElement {
   const params = useParams();
   const slug = params.slug as string;
+  const locale = (params.locale as string) ?? "ja";
+  const t = i18n[locale] ?? i18n.ja;
 
   const [event, setEvent] = useState<EventItem | null>(null);
   const [user, setUser] = useState<AuthUser | null>(null);
@@ -66,7 +116,6 @@ export default function EventDetailPage(): ReactElement {
     try {
       const result = await apiMutate<{ luckyNumber: number }>(`events/${event.id}/register`, "POST");
       setMyReg({ luckyNumber: result.luckyNumber, isWinner: false });
-      // Refresh event count
       const ev = await apiGet<EventItem>(`events/${slug}`);
       setEvent(ev);
     } catch (e) {
@@ -87,7 +136,7 @@ export default function EventDetailPage(): ReactElement {
   return (
     <div className="space-y-8">
       <nav className="text-xs font-medium text-slate-500">
-        <Link href="/events" className="transition hover:text-cyan-400">Events</Link>
+        <Link href="/events" className="transition hover:text-cyan-400">{t.events}</Link>
         <span className="mx-2 text-slate-600">/</span>
         <span className="text-slate-200">{event.title}</span>
       </nav>
@@ -109,14 +158,14 @@ export default function EventDetailPage(): ReactElement {
 
           <div className="mt-4 flex flex-wrap gap-3">
             <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${event.status === "OPEN" ? "border border-emerald-400/20 bg-emerald-500/10 text-emerald-300" : "border border-slate-400/20 bg-slate-500/10 text-slate-300"}`}>
-              {statusLabels[event.status] ?? event.status}
+              {t[statusKeyMap[event.status] ?? ""] ?? event.status}
             </span>
             <span className="inline-flex items-center gap-1.5 rounded-full border border-cyan-400/20 bg-cyan-500/10 px-3 py-1 text-xs font-semibold text-cyan-300">
               👥 {event._count.registrations}/{event.maxParticipants}
             </span>
             {event.drawDate && (
               <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/20 bg-amber-500/10 px-3 py-1 text-xs font-semibold text-amber-300">
-                📅 {new Date(event.drawDate).toLocaleDateString()}
+                📅 {new Date(event.drawDate).toLocaleDateString(locale)}
               </span>
             )}
           </div>
@@ -127,7 +176,7 @@ export default function EventDetailPage(): ReactElement {
 
           {event.prizeDescription && (
             <div className="mt-6 rounded-2xl border border-amber-400/15 bg-amber-500/5 p-5">
-              <h3 className="flex items-center gap-2 font-display text-sm font-bold uppercase tracking-wider text-amber-300">🎁 Prize</h3>
+              <h3 className="flex items-center gap-2 font-display text-sm font-bold uppercase tracking-wider text-amber-300">{t.prize}</h3>
               <p className="mt-2 text-sm text-slate-300">{event.prizeDescription}</p>
             </div>
           )}
@@ -135,7 +184,7 @@ export default function EventDetailPage(): ReactElement {
           {/* Winning number */}
           {event.status === "DRAWN" && event.winningNumber != null && (
             <div className="mt-6 rounded-2xl border border-emerald-400/20 bg-emerald-500/10 p-6 text-center">
-              <p className="text-sm font-semibold text-emerald-300">🏆 Winning Number</p>
+              <p className="text-sm font-semibold text-emerald-300">{t.winningNumber}</p>
               <p className="mt-2 font-display text-5xl font-black text-emerald-400">#{event.winningNumber}</p>
             </div>
           )}
@@ -144,35 +193,35 @@ export default function EventDetailPage(): ReactElement {
           <div className="mt-6 border-t border-white/[0.06] pt-6">
             {!user ? (
               <div className="text-center">
-                <p className="text-sm text-slate-400 mb-3">ログインして参加 / Login to participate</p>
+                <p className="text-sm text-slate-400 mb-3">{t.loginPrompt}</p>
                 <Link href="/login" className="inline-block rounded-xl bg-gradient-to-r from-cyan-600 to-cyan-500 px-6 py-2.5 text-sm font-bold text-white shadow-lg shadow-cyan-500/20 transition hover:shadow-cyan-500/40">
-                  ログイン / Login
+                  {t.loginBtn}
                 </Link>
               </div>
             ) : myReg ? (
               <div className="text-center rounded-2xl border border-cyan-400/20 bg-cyan-500/5 p-6">
-                <p className="text-sm font-semibold text-cyan-300 mb-2">✅ 登録済み / Registered</p>
+                <p className="text-sm font-semibold text-cyan-300 mb-2">{t.registered}</p>
                 <p className="font-display text-4xl font-black text-cyan-400">#{myReg.luckyNumber}</p>
-                <p className="mt-2 text-xs text-slate-400">Your lucky number</p>
+                <p className="mt-2 text-xs text-slate-400">{t.luckyNumber}</p>
                 {myReg.isWinner && (
                   <div className="mt-4 rounded-xl bg-emerald-500/10 border border-emerald-400/20 px-4 py-3">
-                    <p className="text-sm font-bold text-emerald-400">🏆 おめでとう！You won! 🏆</p>
+                    <p className="text-sm font-bold text-emerald-400">{t.youWon}</p>
                   </div>
                 )}
               </div>
             ) : event.status === "OPEN" ? (
               <div className="text-center">
-                <p className="text-sm text-slate-400 mb-3">参加してラッキーナンバーをゲット！</p>
+                <p className="text-sm text-slate-400 mb-3">{t.joinPrompt}</p>
                 <button
                   onClick={handleRegister}
                   disabled={registering}
                   className="rounded-xl bg-gradient-to-r from-cyan-600 to-cyan-500 px-8 py-3 text-sm font-bold text-white shadow-lg shadow-cyan-500/20 transition hover:shadow-cyan-500/40 disabled:opacity-50"
                 >
-                  {registering ? "登録中..." : "🎲 参加する / Join Event"}
+                  {registering ? t.joining : t.joinBtn}
                 </button>
               </div>
             ) : (
-              <p className="text-center text-sm text-slate-500">Event is not open for registration</p>
+              <p className="text-center text-sm text-slate-500">{t.closed}</p>
             )}
           </div>
         </div>
