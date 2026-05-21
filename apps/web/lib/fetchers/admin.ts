@@ -130,8 +130,7 @@ export type UpdateNewsPayload = Partial<CreateNewsPayload>;
 
 export const adminNews = {
   list: async (locale = "vi"): Promise<AdminNews[]> => {
-    const res = await apiGet<PaginatedResponse<AdminNews>>("news/admin/all", { locale, limit: 200 });
-    return res.data;
+    return apiGet<AdminNews[]>("news/admin/all", { locale, limit: 200 });
   },
   create: (data: CreateNewsPayload) => apiMutate<AdminNews>("news", "POST", data),
   update: (id: string, data: UpdateNewsPayload) => apiMutate<AdminNews>(`news/${id}`, "PATCH", data),

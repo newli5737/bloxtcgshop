@@ -25,7 +25,7 @@ export class NewsService {
       this.prisma.news.count(),
       this.prisma.news.findMany({
         orderBy: { publishedAt: "desc" }, skip, take: limit,
-        include: { translations: { where: { locale } } },
+        include: { translations: true },
       }),
     ]);
     return { data: rows as NewsResponse[], meta: { total, page, limit, totalPages: Math.max(1, Math.ceil(total / limit)) } };
