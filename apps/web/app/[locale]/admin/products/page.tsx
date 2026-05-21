@@ -11,7 +11,6 @@ import {
   BtnPrimary, BtnSecondary, BtnAction, LoadingState, EmptyState, ErrorBanner,
 } from "../../../../components/admin/AdminUI";
 
-// ─── Actions (stable references) ───
 const productActions = {
   list: () => adminProducts.list("ja"),
   create: (d: CreateProductPayload) => adminProducts.create(d),
@@ -21,6 +20,8 @@ const productActions = {
 
 const initForm = { slug: "", sku: "", price: 0, salePrice: "", stock: 0, nameJa: "", nameVi: "", descJa: "", descVi: "", categoryId: "", isFeatured: false, isNewArrival: false };
 type FormState = typeof initForm;
+
+const PAGE_SIZE = 15;
 
 export default function AdminProductsPage(): ReactElement {
   const { items, loading, error, saving, create, update, remove } = useAdminCrud(productActions);
@@ -32,10 +33,33 @@ export default function AdminProductsPage(): ReactElement {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
 
-  // Load categories once
+  // Search & pagination
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+
   useMemo(() => { adminCategories.list("ja").then(setCategories).catch(() => {}); }, []);
 
   const set = useCallback((patch: Partial<FormState>) => setForm((f) => ({ ...f, ...patch })), []);
+
+  // Filtered items
+  const filtered = useMemo(() => {
+    if (!search.trim()) return items;
+    const q = search.toLowerCase();
+    return items.filter((p) =>
+      p.name.toLowerCase().includes(q) ||
+      p.sku.toLowerCase().includes(q) ||
+      p.slug.toLowerCase().includes(q) ||
+      (p.categoryName ?? "").toLowerCase().includes(q)
+    );
+  }, [items, search]);
+
+  // Pagination
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const safePage = Math.min(page, totalPages);
+  const paged = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+
+  // Reset page when search changes
+  const handleSearch = (val: string) => { setSearch(val); setPage(1); };
 
   const openCreate = () => { setEditId(null); setForm(initForm); setImagePreview(null); setDetail(null); setShowForm(true); };
   const openEdit = (p: AdminProduct) => {
@@ -52,7 +76,6 @@ export default function AdminProductsPage(): ReactElement {
   };
 
   const handleSave = async () => {
-    console.log("[handleSave] imagePreview =", imagePreview);
     const payload: CreateProductPayload = {
       slug: form.slug, sku: form.sku, price: form.price, stock: form.stock,
       salePrice: form.salePrice ? Number(form.salePrice) : undefined,
@@ -63,7 +86,6 @@ export default function AdminProductsPage(): ReactElement {
         { locale: "vi", name: form.nameVi || form.nameJa, description: form.descVi || form.descJa },
       ],
     };
-    console.log("[handleSave] payload =", JSON.stringify(payload));
     try {
       if (editId) { await update(editId, payload); } else { await create(payload); }
       setShowForm(false); setEditId(null);
@@ -84,9 +106,31 @@ export default function AdminProductsPage(): ReactElement {
     <div>
       {error && <ErrorBanner message={error} onDismiss={() => {}} />}
 
-      <AdminPageHeader title="📦 Quản lý sản phẩm" count={items.length}>
+      <AdminPageHeader title="📦 Quản lý sản phẩm" count={filtered.length}>
         <BtnPrimary onClick={openCreate}>+ Thêm sản phẩm</BtnPrimary>
       </AdminPageHeader>
+
+      {/* Search bar */}
+      <div className="mb-5 flex items-center gap-3">
+        <div className="relative flex-1 max-w-md">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm">🔍</span>
+          <input
+            type="text"
+            placeholder="Tìm theo tên, SKU, slug, danh mục..."
+            value={search}
+            onChange={(e) => handleSearch(e.target.value)}
+            className="w-full rounded-xl border border-white/10 bg-[#0f1117] py-2.5 pl-9 pr-4 text-sm text-white placeholder-slate-500 focus:border-cyan-500/50 focus:outline-none focus:ring-1 focus:ring-cyan-500/30 transition"
+          />
+          {search && (
+            <button onClick={() => handleSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white text-xs">✕</button>
+          )}
+        </div>
+        {search && (
+          <span className="text-xs text-slate-500">
+            {filtered.length} kết quả
+          </span>
+        )}
+      </div>
 
       {/* Detail dialog */}
       <Modal open={!!detail} onClose={() => setDetail(null)} title="Chi tiết sản phẩm" wide>
@@ -147,9 +191,9 @@ export default function AdminProductsPage(): ReactElement {
 
       {/* Table */}
       <AdminTable headers={["Ảnh", "Tên", "SKU", "Giá", "Kho", "Danh mục", "Thao tác"]}>
-        {items.map((p) => (
+        {paged.map((p) => (
           <tr key={p.id} className="border-b border-white/[0.04] hover:bg-white/[0.02] cursor-pointer" onClick={() => setDetail(p)}>
-            <td className="px-4 py-3">{p.imageUrl ? <Image src={p.imageUrl} alt="" width={40} height={40} unoptimized className="h-10 w-10 rounded-lg object-cover" /> : <span className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-slate-800 text-lg">📦</span>}</td>
+            <td className="px-4 py-3">{p.imageUrl && !p.imageUrl.includes("placehold") ? <Image src={p.imageUrl} alt="" width={40} height={40} unoptimized className="h-10 w-10 rounded-lg object-cover" /> : <span className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-slate-800 text-lg">📦</span>}</td>
             <td className="px-4 py-3 font-medium text-white max-w-[200px] truncate">{p.name}</td>
             <td className="px-4 py-3 text-slate-400 font-mono text-xs">{p.sku}</td>
             <td className="px-4 py-3"><span className="text-cyan-400 font-semibold">¥{p.price.toLocaleString()}</span>{p.salePrice ? <span className="ml-1 text-xs text-amber-400">→ ¥{p.salePrice.toLocaleString()}</span> : null}</td>
@@ -164,7 +208,49 @@ export default function AdminProductsPage(): ReactElement {
           </tr>
         ))}
       </AdminTable>
-      {items.length === 0 && <EmptyState message="Chưa có sản phẩm nào" />}
+      {filtered.length === 0 && <EmptyState message={search ? "Không tìm thấy sản phẩm nào" : "Chưa có sản phẩm nào"} />}
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="mt-4 flex items-center justify-between">
+          <p className="text-xs text-slate-500">
+            Trang {safePage}/{totalPages} · Hiển thị {(safePage - 1) * PAGE_SIZE + 1}–{Math.min(safePage * PAGE_SIZE, filtered.length)} / {filtered.length}
+          </p>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => setPage(1)}
+              disabled={safePage <= 1}
+              className="rounded-lg px-2.5 py-1.5 text-xs text-slate-400 hover:bg-white/[0.06] hover:text-white disabled:opacity-30 disabled:pointer-events-none transition"
+            >«</button>
+            <button
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={safePage <= 1}
+              className="rounded-lg px-2.5 py-1.5 text-xs text-slate-400 hover:bg-white/[0.06] hover:text-white disabled:opacity-30 disabled:pointer-events-none transition"
+            >‹</button>
+            {Array.from({ length: totalPages }, (_, i) => i + 1)
+              .filter((n) => n === 1 || n === totalPages || Math.abs(n - safePage) <= 2)
+              .map((n, i, arr) => (
+                <span key={n}>
+                  {i > 0 && arr[i - 1] !== n - 1 && <span className="px-1 text-xs text-slate-600">…</span>}
+                  <button
+                    onClick={() => setPage(n)}
+                    className={`min-w-[2rem] rounded-lg px-2 py-1.5 text-xs font-semibold transition ${n === safePage ? "bg-cyan-600 text-white shadow-lg shadow-cyan-500/20" : "text-slate-400 hover:bg-white/[0.06] hover:text-white"}`}
+                  >{n}</button>
+                </span>
+              ))}
+            <button
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={safePage >= totalPages}
+              className="rounded-lg px-2.5 py-1.5 text-xs text-slate-400 hover:bg-white/[0.06] hover:text-white disabled:opacity-30 disabled:pointer-events-none transition"
+            >›</button>
+            <button
+              onClick={() => setPage(totalPages)}
+              disabled={safePage >= totalPages}
+              className="rounded-lg px-2.5 py-1.5 text-xs text-slate-400 hover:bg-white/[0.06] hover:text-white disabled:opacity-30 disabled:pointer-events-none transition"
+            >»</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -43,16 +43,13 @@ export async function apiMutate<T = void>(
   body?: object,
 ): Promise<T> {
   const url = `${apiBase()}/${path.replace(/^\//, "")}`;
-  console.log("[apiMutate] =>", method, url, JSON.stringify(body));
   const res = await fetch(url, {
     method,
     credentials: "include",
     headers: body ? { "Content-Type": "application/json" } : undefined,
     body: body ? JSON.stringify(body) : undefined,
   });
-  const text = await res.text();
-  console.log("[apiMutate] <=", res.status, text);
-  const json = JSON.parse(text) as ApiEnvelope<T>;
+  const json = (await res.json()) as ApiEnvelope<T>;
   if (!res.ok || json.error) {
     throw new Error(json.error?.message ?? `Request failed: ${res.status}`);
   }

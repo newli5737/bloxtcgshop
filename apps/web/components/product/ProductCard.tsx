@@ -1,4 +1,5 @@
 import type { ReactElement } from "react";
+import Image from "next/image";
 import { Link } from "../../i18n/navigation";
 
 export type CatalogProduct = {
@@ -23,8 +24,14 @@ function formatMoney(value: number, locale: string): string {
   }).format(value);
 }
 
+function hasRealImage(url: string | null): boolean {
+  if (!url) return false;
+  return !url.includes("placehold");
+}
+
 export function ProductCard({ product, locale }: Props): ReactElement {
   const hasSale = product.salePrice != null && product.salePrice < product.price;
+  const realImage = hasRealImage(product.imageUrl);
 
   return (
     <Link
@@ -36,16 +43,19 @@ export function ProductCard({ product, locale }: Props): ReactElement {
 
       <div className="relative aspect-[3/4] overflow-hidden bg-gradient-to-b from-surface-200 to-surface-300">
         <div className="pointer-events-none absolute inset-0 z-10 bg-gradient-to-t from-surface/40 via-transparent to-white/[0.02] opacity-0 transition group-hover:opacity-100" />
-        {product.imageUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={product.imageUrl}
-            alt=""
-            className="h-full w-full object-cover transition duration-500 ease-out group-hover:scale-105"
+        {realImage ? (
+          <Image
+            src={product.imageUrl!}
+            alt={product.name}
+            fill
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+            unoptimized
+            className="object-cover transition duration-500 ease-out group-hover:scale-105"
           />
         ) : (
-          <div className="flex h-full w-full items-center justify-center font-display text-4xl font-bold text-slate-600/40">
-            ?
+          <div className="flex h-full w-full flex-col items-center justify-center gap-2 bg-gradient-to-br from-[#1a1d2e] to-[#13151d]">
+            <span className="text-4xl opacity-40">🃏</span>
+            <span className="px-3 text-center text-xs font-medium text-slate-500 line-clamp-2">{product.name}</span>
           </div>
         )}
         {hasSale ? (
