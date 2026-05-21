@@ -19,7 +19,6 @@ type EventDetail = {
 };
 
 export default function AdminEventDetailPage({ params }: { params: { id: string } }): ReactElement {
-  const [event, setEvent] = useState<EventDetail | null>(null);
   const [registrations, setRegistrations] = useState<Registration[]>([]);
 
   const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3041/v1";

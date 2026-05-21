@@ -9,7 +9,6 @@ type Props = { params: { locale: string; slug: string } };
 export default async function EventDetailPage({ params }: Props): Promise<ReactElement> {
   const { locale, slug } = params;
   const te = await getTranslations("events");
-  const tc = await getTranslations("common");
   const event = await apiFetch<EventItem>(`events/${slug}`).then((r) => r.data);
 
   return (
