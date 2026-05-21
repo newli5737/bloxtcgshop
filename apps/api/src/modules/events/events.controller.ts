@@ -4,7 +4,8 @@ import { Role } from "@pokemart/database";
 import { CurrentUser, type AuthUser } from "../../common/decorators/current-user.decorator";
 import { Public } from "../../common/decorators/public.decorator";
 import { Roles } from "../../common/decorators/roles.decorator";
-import type { EventResponse, EventRegistrationResponse, EventDrawResult, DeleteResult } from "../../common/types/responses";
+import type { EventResponse, EventRegistrationResponse, DeleteResult } from "../../common/types/responses";
+import type { DrawResult } from "./events.service";
 import { CreateEventDto } from "./dto/create-event.dto";
 import { UpdateEventDto } from "./dto/update-event.dto";
 import { EventsService } from "./events.service";
@@ -75,7 +76,10 @@ export class EventsController {
   @ApiBearerAuth()
   @Roles(Role.ADMIN)
   @Post(":id/draw")
-  draw(@Param("id") id: string): Promise<EventDrawResult> {
-    return this.events.draw(id);
+  draw(
+    @Param("id") id: string,
+    @Body() body: { winningNumbers: number[]; emailLang?: "ja" | "en" },
+  ): Promise<DrawResult> {
+    return this.events.draw(id, body.winningNumbers, body.emailLang ?? "ja");
   }
 }

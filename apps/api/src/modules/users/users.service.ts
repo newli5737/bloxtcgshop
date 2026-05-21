@@ -1,7 +1,18 @@
 import { ConflictException, Injectable, NotFoundException } from "@nestjs/common";
+import { Role } from "@pokemart/database";
 import { PrismaService } from "../../prisma/prisma.service";
 import type { UserProfile, WishlistProduct, WishlistEntry } from "../../common/types/responses";
 import type { UpdateProfileDto } from "./dto/update-profile.dto";
+
+export interface AdminUser {
+  id: string;
+  email: string;
+  name: string | null;
+  role: Role;
+  avatarUrl: string | null;
+  locale: string;
+  createdAt: Date;
+}
 
 @Injectable()
 export class UsersService {
@@ -23,6 +34,45 @@ export class UsersService {
       select: { id: true, email: true, name: true, role: true, avatarUrl: true, locale: true },
     });
   }
+
+  // ─── Admin ───
+
+  async listAll(page = 1, limit = 50): Promise<{ data: AdminUser[]; meta: { total: number; page: number; limit: number; totalPages: number } }> {
+    const skip = (page - 1) * limit;
+    const [total, rows] = await Promise.all([
+      this.prisma.user.count(),
+      this.prisma.user.findMany({
+        orderBy: { createdAt: "desc" },
+        skip,
+        take: limit,
+        select: { id: true, email: true, name: true, role: true, avatarUrl: true, locale: true, createdAt: true },
+      }),
+    ]);
+    return { data: rows, meta: { total, page, limit, totalPages: Math.max(1, Math.ceil(total / limit)) } };
+  }
+
+  async updateRole(userId: string, role: Role): Promise<AdminUser> {
+    try {
+      return await this.prisma.user.update({
+        where: { id: userId },
+        data: { role },
+        select: { id: true, email: true, name: true, role: true, avatarUrl: true, locale: true, createdAt: true },
+      });
+    } catch {
+      throw new NotFoundException("User not found");
+    }
+  }
+
+  async deleteUser(userId: string): Promise<{ id: string }> {
+    try {
+      await this.prisma.user.delete({ where: { id: userId } });
+      return { id: userId };
+    } catch {
+      throw new NotFoundException("User not found");
+    }
+  }
+
+  // ─── Wishlist ───
 
   async wishlist(userId: string, locale = "ja"): Promise<WishlistProduct[]> {
     const rows = await this.prisma.wishlist.findMany({

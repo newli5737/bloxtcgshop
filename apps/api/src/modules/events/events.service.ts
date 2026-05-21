@@ -7,15 +7,23 @@ import {
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import { EventStatus } from "@pokemart/database";
 import { PrismaService } from "../../prisma/prisma.service";
-import type { EventResponse, EventRegistrationResponse, EventDrawResult, DeleteResult } from "../../common/types/responses";
+import { MailService } from "../mail/mail.service";
+import type { EventResponse, EventRegistrationResponse, DeleteResult } from "../../common/types/responses";
 import type { CreateEventDto } from "./dto/create-event.dto";
 import type { UpdateEventDto } from "./dto/update-event.dto";
+
+export interface DrawResult {
+  winningNumbers: number[];
+  winners: Array<{ luckyNumber: number; email: string; name: string | null }>;
+  emailsSent: number;
+}
 
 @Injectable()
 export class EventsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly eventEmitter: EventEmitter2,
+    private readonly mail: MailService,
   ) {}
 
   async list(): Promise<EventResponse[]> {
@@ -52,23 +60,21 @@ export class EventsService {
   }
 
   async update(id: string, dto: UpdateEventDto): Promise<EventResponse> {
-    try {
-      const updated = await this.prisma.event.update({
-        where: { id },
-        data: {
-          title: dto.title,
-          description: dto.description,
-          prizeDescription: dto.prizeDescription,
-          imageUrl: dto.imageUrl,
-          status: dto.status,
-          maxParticipants: dto.maxParticipants,
-          drawDate: dto.drawDate ? new Date(dto.drawDate) : undefined,
-        },
-      });
-      return updated as EventResponse;
-    } catch {
-      throw new NotFoundException("Event not found");
-    }
+    const exists = await this.prisma.event.findUnique({ where: { id } });
+    if (!exists) throw new NotFoundException("Event not found");
+    const updated = await this.prisma.event.update({
+      where: { id },
+      data: {
+        title: dto.title,
+        description: dto.description,
+        prizeDescription: dto.prizeDescription,
+        imageUrl: dto.imageUrl,
+        status: dto.status,
+        maxParticipants: dto.maxParticipants,
+        drawDate: dto.drawDate ? new Date(dto.drawDate) : undefined,
+      },
+    });
+    return updated as EventResponse;
   }
 
   async remove(id: string): Promise<DeleteResult> {
@@ -107,17 +113,11 @@ export class EventsService {
       luckyNumber = Math.floor(Math.random() * event.maxParticipants) + 1;
     } while (taken.has(luckyNumber));
 
-    const registration = await this.prisma.eventRegistration.create({
+    await this.prisma.eventRegistration.create({
       data: { eventId, userId, luckyNumber },
     });
 
-    this.eventEmitter.emit("event.registered", {
-      eventId,
-      userId,
-      luckyNumber: registration.luckyNumber,
-    });
-
-    return { luckyNumber: registration.luckyNumber };
+    return { luckyNumber };
   }
 
   async getMyRegistration(eventId: string, userId: string): Promise<EventRegistrationResponse> {
@@ -132,53 +132,64 @@ export class EventsService {
     const result = await this.prisma.eventRegistration.findMany({
       where: { eventId },
       include: { user: { select: { id: true, email: true, name: true } } },
-      orderBy: { createdAt: "asc" },
+      orderBy: { luckyNumber: "asc" },
     });
     return result as EventRegistrationResponse[];
   }
 
-  async draw(eventId: string): Promise<EventDrawResult> {
+  async draw(eventId: string, winningNumbers: number[], emailLang: "ja" | "en" = "ja"): Promise<DrawResult> {
     const event = await this.prisma.event.findUnique({
       where: { id: eventId },
-      include: { registrations: true },
+      include: { registrations: { include: { user: { select: { email: true, name: true } } } } },
     });
     if (!event) throw new NotFoundException("Event not found");
-    if (event.status === EventStatus.DRAWN) {
-      throw new BadRequestException("Event already drawn");
-    }
     if (event.registrations.length === 0) {
       throw new BadRequestException("No registrations yet");
     }
 
-    const randomIndex = Math.floor(Math.random() * event.registrations.length);
-    const winnerReg = event.registrations[randomIndex];
-    const winningNumber = winnerReg.luckyNumber;
+    // Find matching registrations
+    const winnerRegs = event.registrations.filter((r) => winningNumbers.includes(r.luckyNumber));
+    if (winnerRegs.length === 0) {
+      throw new BadRequestException("None of the provided numbers match any registration");
+    }
 
+    // Mark winners + update event status
     await this.prisma.$transaction([
+      ...winnerRegs.map((r) =>
+        this.prisma.eventRegistration.update({
+          where: { id: r.id },
+          data: { isWinner: true },
+        }),
+      ),
       this.prisma.event.update({
         where: { id: eventId },
-        data: { status: EventStatus.DRAWN, winningNumber, drawnAt: new Date() },
-      }),
-      this.prisma.eventRegistration.update({
-        where: { id: winnerReg.id },
-        data: { isWinner: true },
+        data: { status: EventStatus.DRAWN, winningNumber: winningNumbers[0], drawnAt: new Date() },
       }),
     ]);
 
-    const winner = await this.prisma.user.findUnique({
-      where: { id: winnerReg.userId },
-      select: { id: true, email: true, name: true },
-    });
+    // Send emails to all winners
+    const winners: DrawResult["winners"] = [];
+    let emailsSent = 0;
+    for (const reg of winnerRegs) {
+      const user = reg.user as { email: string; name: string | null };
+      winners.push({ luckyNumber: reg.luckyNumber, email: user.email, name: user.name });
+      await this.mail.sendWinnerNotification(
+        user.email,
+        event.title,
+        reg.luckyNumber,
+        event.prizeDescription,
+        emailLang,
+      );
+      emailsSent++;
+    }
 
     this.eventEmitter.emit("event.drawn", {
       eventId,
       eventTitle: event.title,
-      prizeDescription: event.prizeDescription,
-      winningNumber,
-      winnerEmail: winner?.email,
-      winnerName: winner?.name,
+      winningNumbers,
+      winnersCount: winners.length,
     });
 
-    return { winningNumber, winner };
+    return { winningNumbers, winners, emailsSent };
   }
 }

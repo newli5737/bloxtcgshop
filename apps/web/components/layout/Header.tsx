@@ -3,6 +3,9 @@
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { Link, usePathname } from "../../i18n/navigation";
+import { apiGet, apiMutate } from "../../lib/api";
+
+type AuthUser = { id: string; email: string; name: string | null; role: string };
 
 const navClass =
   "rounded-lg px-3 py-2 text-sm font-medium text-slate-400 transition hover:bg-white/[0.06] hover:text-cyan-300";
@@ -12,6 +15,18 @@ export function Header(): React.ReactElement {
   const locale = useLocale();
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+
+  useEffect(() => {
+    apiGet<AuthUser>("users/me").then(setUser).catch(() => setUser(null));
+  }, []);
+
+  const handleLogout = async () => {
+    try { await apiMutate("auth/logout", "POST"); } catch { /* ok */ }
+    setUser(null); setUserMenuOpen(false);
+    window.location.href = `/${locale}`;
+  };
 
   useEffect(() => {
     setMobileOpen(false);
@@ -105,6 +120,38 @@ export function Header(): React.ReactElement {
               </button>
             ))}
           </div>
+
+          {/* Auth button */}
+          {user ? (
+            <div className="relative hidden sm:block">
+              <button
+                type="button"
+                onClick={() => setUserMenuOpen((o) => !o)}
+                className="flex h-9 items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-3 text-sm font-medium text-slate-300 transition hover:border-cyan-400/30 hover:text-cyan-300"
+              >
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-cyan-500 to-brand-500 text-[10px] font-bold text-white">
+                  {(user.name ?? user.email)[0].toUpperCase()}
+                </span>
+                <span className="max-w-[100px] truncate">{user.name ?? user.email.split("@")[0]}</span>
+              </button>
+              {userMenuOpen && (
+                <>
+                  <button type="button" className="fixed inset-0 z-40" onClick={() => setUserMenuOpen(false)} />
+                  <div className="absolute right-0 top-full z-50 mt-2 w-48 rounded-xl border border-white/[0.08] bg-[#12141d] p-1.5 shadow-2xl">
+                    <div className="px-3 py-2 text-xs text-slate-500 truncate">{user.email}</div>
+                    {user.role === "ADMIN" && (
+                      <Link href="/admin" className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-300 transition hover:bg-white/[0.06]" onClick={() => setUserMenuOpen(false)}>⚙️ Admin</Link>
+                    )}
+                    <button type="button" onClick={handleLogout} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-red-400 transition hover:bg-red-500/10">🚪 Logout</button>
+                  </div>
+                </>
+              )}
+            </div>
+          ) : (
+            <Link href="/login" className="hidden rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-2 text-xs font-bold text-cyan-400 transition hover:bg-cyan-500/20 sm:block">
+              Login
+            </Link>
+          )}
 
           <button
             type="button"
