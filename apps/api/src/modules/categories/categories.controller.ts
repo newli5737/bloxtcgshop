@@ -1,6 +1,8 @@
-import { Controller, Get, Param, Query } from "@nestjs/common";
-import { ApiTags } from "@nestjs/swagger";
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from "@nestjs/common";
+import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
+import { Role } from "@pokemart/database";
 import { Public } from "../../common/decorators/public.decorator";
+import { Roles } from "../../common/decorators/roles.decorator";
 import type { FilterProductsDto } from "../products/dto/filter-products.dto";
 import { CategoriesService } from "./categories.service";
 
@@ -25,5 +27,26 @@ export class CategoriesController {
   @Get(":slug")
   bySlug(@Param("slug") slug: string, @Query("locale") locale?: string): Promise<unknown> {
     return this.categories.bySlug(slug, locale ?? "ja");
+  }
+
+  @ApiBearerAuth()
+  @Roles(Role.ADMIN)
+  @Post()
+  create(@Body() dto: { slug: string; sortOrder?: number; iconUrl?: string; parentId?: string; translations: Array<{ locale: string; name: string }> }): Promise<unknown> {
+    return this.categories.create(dto);
+  }
+
+  @ApiBearerAuth()
+  @Roles(Role.ADMIN)
+  @Patch(":id")
+  update(@Param("id") id: string, @Body() dto: { slug?: string; sortOrder?: number; iconUrl?: string; translations?: Array<{ locale: string; name: string }> }): Promise<unknown> {
+    return this.categories.update(id, dto);
+  }
+
+  @ApiBearerAuth()
+  @Roles(Role.ADMIN)
+  @Delete(":id")
+  remove(@Param("id") id: string): Promise<unknown> {
+    return this.categories.remove(id);
   }
 }

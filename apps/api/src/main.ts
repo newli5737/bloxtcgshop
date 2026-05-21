@@ -1,19 +1,22 @@
 import { ValidationPipe } from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
+import { NestExpressApplication } from "@nestjs/platform-express";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import * as cookieParser from "cookie-parser";
+import { join } from "path";
 import { AppModule } from "./app.module";
 import { HttpExceptionFilter } from "./common/filters/http-exception.filter";
 import { TransformInterceptor } from "./common/interceptors/transform.interceptor";
 
 async function bootstrap(): Promise<void> {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
   const origins = (process.env.CORS_ORIGINS ?? "http://localhost:3042")
     .split(",")
     .map((s) => s.trim())
     .filter(Boolean);
   app.enableCors({ origin: origins, credentials: true });
   app.use(cookieParser());
+  app.useStaticAssets(join(process.cwd(), "uploads"), { prefix: "/uploads" });
   app.setGlobalPrefix("v1");
   app.useGlobalPipes(
     new ValidationPipe({
