@@ -8,6 +8,15 @@ import type { AdminStats, UploadResult } from "../../common/types/responses";
 import * as fs from "fs";
 import * as path from "path";
 
+interface MulterFile {
+  fieldname: string;
+  originalname: string;
+  encoding: string;
+  mimetype: string;
+  size: number;
+  buffer: Buffer;
+}
+
 @ApiTags("admin")
 @ApiBearerAuth()
 @Controller("admin")
@@ -30,7 +39,7 @@ export class AdminController {
   @Roles(Role.ADMIN)
   @Post("upload")
   @UseInterceptors(FileInterceptor("file"))
-  async upload(@UploadedFile() file: Express.Multer.File): Promise<UploadResult> {
+  async upload(@UploadedFile() file: MulterFile): Promise<UploadResult> {
     const uploadDir = path.join(process.cwd(), "uploads");
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir, { recursive: true });
