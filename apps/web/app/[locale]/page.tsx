@@ -5,6 +5,8 @@ import { SectionHeading } from "../../components/ui/SectionHeading";
 import { Link } from "../../i18n/navigation";
 import { apiFetch } from "../../lib/api";
 
+export const revalidate = 10;
+
 type Banner = {
   id: string;
   imageUrl: string;

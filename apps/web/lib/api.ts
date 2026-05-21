@@ -27,7 +27,7 @@ export async function apiFetch<T>(
   const res = await fetch(url.toString(), {
     ...init,
     credentials: "include",
-    next: { revalidate: 60 },
+    next: { revalidate: 10 },
   });
   const json = (await res.json()) as ApiEnvelope<T>;
   if (!res.ok || json.error) {
