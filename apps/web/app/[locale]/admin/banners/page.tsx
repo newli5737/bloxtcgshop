@@ -1,5 +1,6 @@
 "use client";
 import { type ReactElement, useState, useCallback } from "react";
+import Image from "next/image";
 import { useAdminCrud } from "../../../../lib/hooks/useAdminCrud";
 import { adminBanners, adminUpload, type AdminBanner, type CreateBannerPayload, type UpdateBannerPayload } from "../../../../lib/fetchers/admin";
 import {
@@ -89,7 +90,7 @@ export default function AdminBannersPage(): ReactElement {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {items.map((b) => (
           <div key={b.id} className="group overflow-hidden rounded-2xl border border-white/[0.06] bg-[#13151d] transition hover:border-white/10">
-            <img src={b.imageUrl} alt="" className="h-40 w-full object-cover" />
+            <Image src={b.imageUrl} alt="" width={400} height={160} unoptimized className="h-40 w-full object-cover" />
             <div className="p-4">
               <p className="text-sm font-medium text-white">{b.translations[0]?.title ?? "Banner"}</p>
               <p className="mt-1 text-xs text-slate-400">Thứ tự: {b.sortOrder} | {b.isActive ? "✅ Hiển thị" : "❌ Ẩn"}</p>

@@ -1,5 +1,6 @@
 "use client";
 import { type ReactElement, useState, useMemo, useCallback } from "react";
+import Image from "next/image";
 import { useAdminCrud } from "../../../../lib/hooks/useAdminCrud";
 import {
   adminProducts, adminCategories, adminUpload,
@@ -84,7 +85,7 @@ export default function AdminProductsPage(): ReactElement {
       <Modal open={!!detail} onClose={() => setDetail(null)} title="Chi tiết sản phẩm" wide>
         {detail && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div>{detail.imageUrl ? <img src={detail.imageUrl} alt="" className="w-full rounded-xl object-cover aspect-square" /> : <div className="w-full rounded-xl bg-slate-800 aspect-square flex items-center justify-center text-4xl">📦</div>}</div>
+            <div>{detail.imageUrl ? <Image src={detail.imageUrl} alt="" width={300} height={300} unoptimized className="w-full rounded-xl object-cover aspect-square" /> : <div className="w-full rounded-xl bg-slate-800 aspect-square flex items-center justify-center text-4xl">📦</div>}</div>
             <div className="md:col-span-2 space-y-3">
               <h2 className="text-xl font-bold text-white">{detail.name}</h2>
               <div className="grid grid-cols-2 gap-3 text-sm">
@@ -141,7 +142,7 @@ export default function AdminProductsPage(): ReactElement {
       <AdminTable headers={["Ảnh", "Tên", "SKU", "Giá", "Kho", "Danh mục", "Thao tác"]}>
         {items.map((p) => (
           <tr key={p.id} className="border-b border-white/[0.04] hover:bg-white/[0.02] cursor-pointer" onClick={() => setDetail(p)}>
-            <td className="px-4 py-3">{p.imageUrl ? <img src={p.imageUrl} alt="" className="h-10 w-10 rounded-lg object-cover" /> : <span className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-slate-800 text-lg">📦</span>}</td>
+            <td className="px-4 py-3">{p.imageUrl ? <Image src={p.imageUrl} alt="" width={40} height={40} unoptimized className="h-10 w-10 rounded-lg object-cover" /> : <span className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-slate-800 text-lg">📦</span>}</td>
             <td className="px-4 py-3 font-medium text-white max-w-[200px] truncate">{p.name}</td>
             <td className="px-4 py-3 text-slate-400 font-mono text-xs">{p.sku}</td>
             <td className="px-4 py-3"><span className="text-cyan-400 font-semibold">¥{p.price.toLocaleString()}</span>{p.salePrice ? <span className="ml-1 text-xs text-amber-400">→ ¥{p.salePrice.toLocaleString()}</span> : null}</td>

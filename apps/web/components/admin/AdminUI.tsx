@@ -3,6 +3,7 @@
  * All admin pages reuse these instead of duplicating styles.
  */
 import type { ReactElement, ReactNode, ChangeEvent } from "react";
+import Image from "next/image";
 
 // ─── Layout ───
 export function AdminPageHeader({ title, count, children }: { title: string; count?: number; children?: ReactNode }): ReactElement {
@@ -84,7 +85,7 @@ export function FileInput({ label, onChange, preview }: { label: string; onChang
   return (
     <Field label={label}>
       <input type="file" accept="image/*" onChange={onChange} className="text-sm text-slate-400 file:mr-3 file:rounded-lg file:border-0 file:bg-cyan-600/20 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-cyan-400 file:cursor-pointer" />
-      {preview && <img src={preview} alt="" className="mt-2 h-20 rounded-lg object-cover" />}
+      {preview && <Image src={preview} alt="" width={80} height={80} unoptimized className="mt-2 h-20 w-auto rounded-lg object-cover" />}
     </Field>
   );
 }
