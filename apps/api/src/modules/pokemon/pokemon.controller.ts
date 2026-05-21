@@ -2,7 +2,7 @@ import { Controller, Get, Param, Query } from "@nestjs/common";
 import { ApiTags } from "@nestjs/swagger";
 import { Public } from "../../common/decorators/public.decorator";
 import type { PokemonResponse, PaginatedResponse, ProductListItem } from "../../common/types/responses";
-import type { FilterProductsDto } from "../products/dto/filter-products.dto";
+import { FilterProductsDto } from "../products/dto/filter-products.dto";
 import { PokemonService } from "./pokemon.service";
 
 @ApiTags("pokemon")

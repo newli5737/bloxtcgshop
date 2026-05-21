@@ -4,7 +4,7 @@ import { Role } from "@pokemart/database";
 import { Public } from "../../common/decorators/public.decorator";
 import { Roles } from "../../common/decorators/roles.decorator";
 import type { PaginatedResponse, ProductListItem, ProductDetail, DeleteResult } from "../../common/types/responses";
-import type { CreateProductDto, FilterProductsDto, UpdateProductDto } from "./dto/filter-products.dto";
+import { CreateProductDto, FilterProductsDto, UpdateProductDto } from "./dto/filter-products.dto";
 import { ProductsService } from "./products.service";
 
 @ApiTags("products")

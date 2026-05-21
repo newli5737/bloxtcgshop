@@ -2,7 +2,7 @@ import { Controller, Get, Query } from "@nestjs/common";
 import { ApiTags } from "@nestjs/swagger";
 import { Public } from "../../common/decorators/public.decorator";
 import type { PaginatedResponse, ProductListItem, SearchSuggestion } from "../../common/types/responses";
-import type { FilterProductsDto } from "../products/dto/filter-products.dto";
+import { FilterProductsDto } from "../products/dto/filter-products.dto";
 import { SearchService } from "./search.service";
 
 @ApiTags("search")

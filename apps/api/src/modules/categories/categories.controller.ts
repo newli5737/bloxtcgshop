@@ -4,7 +4,7 @@ import { Role } from "@pokemart/database";
 import { Public } from "../../common/decorators/public.decorator";
 import { Roles } from "../../common/decorators/roles.decorator";
 import type { CategoryResponse, CreateCategoryDto, UpdateCategoryDto, DeleteResult, PaginatedResponse, ProductListItem } from "../../common/types/responses";
-import type { FilterProductsDto } from "../products/dto/filter-products.dto";
+import { FilterProductsDto } from "../products/dto/filter-products.dto";
 import { CategoriesService } from "./categories.service";
 
 @ApiTags("categories")
