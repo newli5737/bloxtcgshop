@@ -1,0 +1,48 @@
+{
+  "common": {
+    "appName": "BloxTCGShop",
+    "browse": "Browse",
+    "products": "Products",
+    "categories": "Categories",
+    "sets": "Card Sets",
+    "pokemon": "Pokémon",
+    "rankings": "Rankings",
+    "news": "News",
+    "search": "Search",
+    "login": "Log in",
+    "language": "Language",
+    "footerTagline": "Premium Trading Card Game marketplace.",
+    "terms": "Terms",
+    "privacy": "Privacy",
+    "readMore": "Read more"
+  },
+  "home": {
+    "heroTitle": "Collect. Battle. Trade.",
+    "heroSubtitle": "Discover booster packs, decks, singles, and accessories.",
+    "shopNow": "Shop products",
+    "newArrivals": "New arrivals",
+    "featured": "Featured",
+    "rankings": "Top sellers",
+    "news": "Latest news",
+    "viewAll": "View all",
+    "categories": "Shop by category",
+    "pokemonNav": "Popular Pokémon",
+    "badgeNew": "Just dropped",
+    "badgeHot": "Trending",
+    "backToNews": "Back to news"
+  },
+  "product": {
+    "from": "From",
+    "viewDetails": "View details",
+    "related": "Related products",
+    "sku": "SKU",
+    "stock": "Stock status",
+    "addToWishlist": "Wishlist",
+    "addToCart": "Add to cart",
+    "comingSoon": "Coming soon",
+    "inStock": "In stock",
+    "lowStock": "Low stock",
+    "outOfStock": "Out of stock",
+    "preOrder": "Pre-order"
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "common": {
+    "appName": "BloxTCGShop",
+    "browse": "Khám phá",
+    "products": "Sản phẩm",
+    "categories": "Danh mục",
+    "sets": "Bộ bài",
+    "pokemon": "Pokémon",
+    "rankings": "Xếp hạng",
+    "news": "Tin tức",
+    "search": "Tìm kiếm",
+    "login": "Đăng nhập",
+    "language": "Ngôn ngữ",
+    "footerTagline": "Sàn thương mại thẻ bài TCG cao cấp.",
+    "terms": "Điều khoản",
+    "privacy": "Bảo mật",
+    "readMore": "Đọc tiếp"
+  },
+  "home": {
+    "heroTitle": "Sưu tầm. Đấu. Trao đổi.",
+    "heroSubtitle": "Booster pack, bộ bài, thẻ lẻ và phụ kiện.",
+    "shopNow": "Xem sản phẩm",
+    "newArrivals": "Hàng mới",
+    "featured": "Nổi bật",
+    "rankings": "Bán chạy",
+    "news": "Tin mới",
+    "viewAll": "Xem tất cả",
+    "categories": "Danh mục",
+    "pokemonNav": "Pokémon phổ biến",
+    "badgeNew": "Mới về",
+    "badgeHot": "Đang hot",
+    "backToNews": "Tất cả tin"
+  },
+  "product": {
+    "from": "Từ",
+    "viewDetails": "Xem chi tiết",
+    "related": "Sản phẩm liên quan",
+    "sku": "Mã SKU",
+    "stock": "Tồn kho",
+    "addToWishlist": "Yêu thích",
+    "addToCart": "Giỏ hàng",
+    "comingSoon": "Sắp có",
+    "inStock": "Còn hàng",
+    "lowStock": "Sắp hết",
+    "outOfStock": "Hết hàng",
+    "preOrder": "Đặt trước"
+  }
+}

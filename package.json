@@ -1,0 +1,21 @@
+{
+  "name": "bloxtcgshop",
+  "private": true,
+  "packageManager": "pnpm@10.12.1",
+  "scripts": {
+    "build": "turbo build",
+    "dev": "turbo dev",
+    "lint": "turbo lint",
+    "db:generate": "pnpm --filter @bloxtcgshop/database db:generate",
+    "db:migrate": "pnpm --filter @bloxtcgshop/database db:migrate",
+    "db:push": "pnpm --filter @bloxtcgshop/database db:push",
+    "db:seed": "pnpm --filter @bloxtcgshop/database db:seed"
+  },
+  "devDependencies": {
+    "turbo": "^2.5.4",
+    "typescript": "^5.7.3"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": ["unrs-resolver", "@prisma/client", "@prisma/engines", "prisma", "esbuild", "@nestjs/core"]
+  }
+}

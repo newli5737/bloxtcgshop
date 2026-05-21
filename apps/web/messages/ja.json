@@ -1,0 +1,48 @@
+{
+  "common": {
+    "appName": "BloxTCGShop",
+    "browse": "さがす",
+    "products": "商品",
+    "categories": "カテゴリー",
+    "sets": "拡張パック",
+    "pokemon": "ポケモン",
+    "rankings": "ランキング",
+    "news": "ニュース",
+    "search": "検索",
+    "login": "ログイン",
+    "language": "言語",
+    "footerTagline": "プレミアムTCGマーケットプレイス。",
+    "terms": "利用規約",
+    "privacy": "プライバシー",
+    "readMore": "続きを読む"
+  },
+  "home": {
+    "heroTitle": "集めて、対戦、交換。",
+    "heroSubtitle": "ブースター、デッキ、シングル、アクセサリー。",
+    "shopNow": "商品を見る",
+    "newArrivals": "新着",
+    "featured": "おすすめ",
+    "rankings": "人気商品",
+    "news": "お知らせ",
+    "viewAll": "すべて見る",
+    "categories": "カテゴリー",
+    "pokemonNav": "人気のポケモン",
+    "badgeNew": "新入荷",
+    "badgeHot": "トレンド",
+    "backToNews": "ニュース一覧へ"
+  },
+  "product": {
+    "from": "",
+    "viewDetails": "詳細を見る",
+    "related": "関連商品",
+    "sku": "SKU",
+    "stock": "在庫",
+    "addToWishlist": "お気に入り",
+    "addToCart": "カート",
+    "comingSoon": "近日公開",
+    "inStock": "在庫あり",
+    "lowStock": "残りわずか",
+    "outOfStock": "在庫切れ",
+    "preOrder": "予約"
+  }
+}

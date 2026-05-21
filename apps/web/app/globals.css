@@ -1,0 +1,94 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-primary: #00d4ff;
+  --color-secondary: #ffd700;
+  --color-accent: #ff4d6a;
+  --color-surface: #050a1a;
+  --color-card: rgba(255, 255, 255, 0.04);
+  --color-text: #e2e8f0;
+  --color-muted: #94a3b8;
+  --radius: 1rem;
+  --shadow-card: 0 4px 24px -4px rgba(0, 0, 0, 0.4);
+  --shadow-hover: 0 20px 50px -12px rgba(0, 212, 255, 0.22);
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply text-slate-100 antialiased;
+    color: var(--color-text);
+    background-color: #050a1a;
+    background-image: radial-gradient(
+        ellipse 100% 60% at 50% -20%,
+        rgba(0, 212, 255, 0.07),
+        transparent 55%
+      ),
+      radial-gradient(ellipse 70% 50% at 100% 10%, rgba(0, 188, 212, 0.05), transparent 50%),
+      radial-gradient(ellipse 50% 40% at 0% 30%, rgba(255, 215, 0, 0.03), transparent 45%);
+    background-attachment: fixed;
+  }
+
+  /* Vietnamese: Be Vietnam Pro */
+  .vi-root {
+    font-family: var(--font-be-vietnam-pro), "Segoe UI", Tahoma, system-ui, sans-serif;
+  }
+  .vi-root .font-display {
+    font-family: var(--font-be-vietnam-pro), "Segoe UI", Tahoma, system-ui, sans-serif;
+  }
+}
+
+@layer components {
+  .glass-panel {
+    @apply rounded-2xl border border-white/[0.08] bg-white/[0.04] shadow-card backdrop-blur-xl;
+  }
+  .glass-panel-strong {
+    @apply rounded-2xl border border-white/[0.1] bg-white/[0.06] shadow-card backdrop-blur-2xl;
+  }
+  .text-gradient-brand {
+    @apply bg-gradient-to-r from-cyan-300 via-brand-400 to-cyan-500 bg-clip-text text-transparent;
+  }
+  .text-gradient-gold {
+    @apply bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500 bg-clip-text text-transparent;
+  }
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-brand-500 to-cyan-500 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-brand-500/25 transition hover:from-brand-400 hover:to-cyan-400 hover:shadow-brand-500/40 active:scale-[0.98];
+  }
+  .btn-secondary {
+    @apply inline-flex items-center justify-center rounded-xl border border-white/[0.12] bg-white/[0.06] px-6 py-3 text-sm font-semibold text-slate-200 shadow-sm backdrop-blur transition hover:border-cyan-400/30 hover:bg-white/[0.1] hover:text-white active:scale-[0.98];
+  }
+  .link-subtle {
+    @apply text-slate-400 transition hover:text-cyan-400;
+  }
+  .dark-card {
+    @apply rounded-2xl border border-white/[0.08] bg-white/[0.04] shadow-card backdrop-blur-sm transition duration-300 hover:border-cyan-400/25 hover:shadow-card-hover;
+  }
+  .neon-border {
+    @apply border border-cyan-400/20;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  .mask-fade-x {
+    mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+  }
+}
+
+/* Custom scrollbar (webkit) */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  @apply rounded-full bg-slate-900/80;
+}
+::-webkit-scrollbar-thumb {
+  @apply rounded-full bg-brand-600/60 hover:bg-brand-500/80;
+}
