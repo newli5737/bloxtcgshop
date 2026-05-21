@@ -93,6 +93,7 @@ export class ProductsService {
         translations: {
           create: dto.translations.map((t) => ({ locale: t.locale, name: t.name, description: t.description })),
         },
+        ...(dto.imageUrl ? { images: { create: { url: dto.imageUrl, isPrimary: true, sortOrder: 0 } } } : {}),
       },
       include: productIncludeObj,
     });
@@ -101,9 +102,32 @@ export class ProductsService {
 
   async update(id: string, dto: UpdateProductDto): Promise<ProductListItem> {
     try {
+      // Handle image update
+      if (dto.imageUrl) {
+        const existing = await this.prisma.productImage.findFirst({ where: { productId: id, isPrimary: true } });
+        if (existing) {
+          await this.prisma.productImage.update({ where: { id: existing.id }, data: { url: dto.imageUrl } });
+        } else {
+          await this.prisma.productImage.create({ data: { productId: id, url: dto.imageUrl, isPrimary: true, sortOrder: 0 } });
+        }
+      }
+      // Handle translations update
+      if (dto.translations) {
+        for (const t of dto.translations) {
+          const existingTr = await this.prisma.productTranslation.findFirst({ where: { productId: id, locale: t.locale } });
+          if (existingTr) {
+            await this.prisma.productTranslation.update({ where: { id: existingTr.id }, data: { name: t.name, description: t.description } });
+          } else {
+            await this.prisma.productTranslation.create({ data: { productId: id, locale: t.locale, name: t.name, description: t.description } });
+          }
+        }
+      }
+      const { imageUrl, translations, ...updateData } = dto;
+      void imageUrl;
+      void translations;
       const product = await this.prisma.product.update({
         where: { id },
-        data: { ...dto, salePrice: dto.salePrice === undefined ? undefined : dto.salePrice },
+        data: updateData,
         include: productIncludeObj,
       });
       return this.mapProductList(product, "ja");

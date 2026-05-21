@@ -145,6 +145,10 @@ export class CreateProductDto {
   @ValidateNested({ each: true })
   @Type(() => ProductTranslationInput)
   translations!: ProductTranslationInput[];
+
+  @IsOptional()
+  @IsString()
+  imageUrl?: string;
 }
 
 export class UpdateProductDto {
@@ -179,4 +183,14 @@ export class UpdateProductDto {
   @IsOptional()
   @Type(() => Boolean)
   isNewArrival?: boolean;
+
+  @IsOptional()
+  @IsString()
+  imageUrl?: string;
+
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => ProductTranslationInput)
+  translations?: ProductTranslationInput[];
 }

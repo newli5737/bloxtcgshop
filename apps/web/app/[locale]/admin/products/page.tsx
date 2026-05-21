@@ -56,6 +56,7 @@ export default function AdminProductsPage(): ReactElement {
       slug: form.slug, sku: form.sku, price: form.price, stock: form.stock,
       salePrice: form.salePrice ? Number(form.salePrice) : null,
       categoryId: form.categoryId || undefined, isFeatured: form.isFeatured, isNewArrival: form.isNewArrival,
+      imageUrl: imagePreview || undefined,
       translations: [
         { locale: "ja", name: form.nameJa, description: form.descJa },
         { locale: "vi", name: form.nameVi || form.nameJa, description: form.descVi || form.descJa },

@@ -41,6 +41,7 @@ export interface CreateProductPayload {
   categoryId?: string;
   isFeatured?: boolean;
   isNewArrival?: boolean;
+  imageUrl?: string;
   translations: Array<{ locale: string; name: string; description?: string }>;
 }
 
