@@ -1,3 +1,4 @@
+import { headers } from "next/headers";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages } from "next-intl/server";
 import type { ReactElement, ReactNode } from "react";
@@ -10,6 +11,20 @@ type Props = {
 export default async function AdminLayout({ children, params }: Props): Promise<ReactElement> {
   const messages = await getMessages({ locale: "vi" });
 
+  const headersList = headers();
+  const pathname = headersList.get("x-pathname") ?? "";
+  const isLogin = pathname.includes("/admin/login");
+
+  // Login page: full-screen, no sidebar
+  if (isLogin) {
+    return (
+      <NextIntlClientProvider messages={messages} locale="vi">
+        {children}
+      </NextIntlClientProvider>
+    );
+  }
+
+  // Other admin pages: sidebar layout
   return (
     <NextIntlClientProvider messages={messages} locale="vi">
       <div className="flex min-h-screen bg-[#0f1117]">

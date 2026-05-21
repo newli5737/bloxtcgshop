@@ -20,7 +20,10 @@ export default function middleware(request: NextRequest): NextResponse {
     }
   }
 
-  return intlMiddleware(request) as NextResponse;
+  const response = intlMiddleware(request) as NextResponse;
+  // Pass pathname to layouts via header
+  response.headers.set("x-pathname", pathname);
+  return response;
 }
 
 export const config = {

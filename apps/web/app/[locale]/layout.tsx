@@ -21,7 +21,7 @@ export default async function LocaleLayout({ children, params }: Props): Promise
   const messages = await getMessages();
 
   const headersList = headers();
-  const pathname = headersList.get("x-next-url") ?? headersList.get("x-invoke-path") ?? "";
+  const pathname = headersList.get("x-pathname") ?? "";
   const isAdmin = pathname.includes("/admin");
 
   if (isAdmin) {
