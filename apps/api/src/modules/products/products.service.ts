@@ -101,6 +101,8 @@ export class ProductsService {
   }
 
   async update(id: string, dto: UpdateProductDto): Promise<ProductListItem> {
+    console.log("[ProductUpdate] id =", id);
+    console.log("[ProductUpdate] dto =", JSON.stringify(dto));
     // Verify product exists
     const exists = await this.prisma.product.findUnique({ where: { id } });
     if (!exists) throw new NotFoundException("Product not found");

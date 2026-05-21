@@ -52,6 +52,7 @@ export default function AdminProductsPage(): ReactElement {
   };
 
   const handleSave = async () => {
+    console.log("[handleSave] imagePreview =", imagePreview);
     const payload: CreateProductPayload = {
       slug: form.slug, sku: form.sku, price: form.price, stock: form.stock,
       salePrice: form.salePrice ? Number(form.salePrice) : undefined,
@@ -62,8 +63,13 @@ export default function AdminProductsPage(): ReactElement {
         { locale: "vi", name: form.nameVi || form.nameJa, description: form.descVi || form.descJa },
       ],
     };
-    if (editId) { await update(editId, payload); } else { await create(payload); }
-    setShowForm(false); setEditId(null);
+    console.log("[handleSave] payload =", JSON.stringify(payload));
+    try {
+      if (editId) { await update(editId, payload); } else { await create(payload); }
+      setShowForm(false); setEditId(null);
+    } catch (err) {
+      console.error("[handleSave] ERROR:", err);
+    }
   };
 
   const handleDelete = async (id: string) => {

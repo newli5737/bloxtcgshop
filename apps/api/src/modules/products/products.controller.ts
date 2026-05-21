@@ -35,6 +35,7 @@ export class ProductsController {
   @Roles(Role.ADMIN)
   @Patch(":id")
   update(@Param("id") id: string, @Body() dto: UpdateProductDto): Promise<ProductListItem> {
+    console.log("[ProductController.update] DTO after validation:", JSON.stringify(dto));
     return this.products.update(id, dto);
   }
 
