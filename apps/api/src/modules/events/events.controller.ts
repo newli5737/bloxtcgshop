@@ -21,12 +21,6 @@ export class EventsController {
     return this.events.list();
   }
 
-  @Public()
-  @Get(":slug")
-  getBySlug(@Param("slug") slug: string): Promise<EventResponse> {
-    return this.events.getBySlug(slug);
-  }
-
   @ApiBearerAuth()
   @Roles(Role.ADMIN)
   @Post()
@@ -34,20 +28,7 @@ export class EventsController {
     return this.events.create(dto);
   }
 
-  @ApiBearerAuth()
-  @Roles(Role.ADMIN)
-  @Patch(":id")
-  update(@Param("id") id: string, @Body() dto: UpdateEventDto): Promise<EventResponse> {
-    return this.events.update(id, dto);
-  }
-
-  @ApiBearerAuth()
-  @Roles(Role.ADMIN)
-  @Delete(":id")
-  remove(@Param("id") id: string): Promise<DeleteResult> {
-    return this.events.remove(id);
-  }
-
+  // Specific sub-routes MUST come before the :slug catch-all
   @ApiBearerAuth()
   @Post(":id/register")
   register(
@@ -81,5 +62,26 @@ export class EventsController {
     @Body() body: { winningNumbers: number[]; emailLang?: "ja" | "en" },
   ): Promise<DrawResult> {
     return this.events.draw(id, body.winningNumbers, body.emailLang ?? "ja");
+  }
+
+  @ApiBearerAuth()
+  @Roles(Role.ADMIN)
+  @Patch(":id")
+  update(@Param("id") id: string, @Body() dto: UpdateEventDto): Promise<EventResponse> {
+    return this.events.update(id, dto);
+  }
+
+  @ApiBearerAuth()
+  @Roles(Role.ADMIN)
+  @Delete(":id")
+  remove(@Param("id") id: string): Promise<DeleteResult> {
+    return this.events.remove(id);
+  }
+
+  // Slug catch-all MUST be LAST to avoid swallowing sub-routes
+  @Public()
+  @Get(":slug")
+  getBySlug(@Param("slug") slug: string): Promise<EventResponse> {
+    return this.events.getBySlug(slug);
   }
 }
