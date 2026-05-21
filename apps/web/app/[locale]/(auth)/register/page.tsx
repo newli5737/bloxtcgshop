@@ -2,49 +2,51 @@
 import { useState, type ReactElement } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
-import { apiMutate } from "../../../lib/api";
-
-type AuthResponse = { user: { id: string; email: string; name: string | null; role: string } };
+import { apiMutate } from "../../../../lib/api";
 
 const t: Record<string, Record<string, string>> = {
   ja: {
     back: "← ホームへ戻る",
-    subtitle: "ログイン",
+    subtitle: "新規登録",
+    name: "お名前",
     email: "メールアドレス",
     password: "パスワード",
-    submit: "ログイン",
-    loading: "ログイン中...",
-    noAccount: "アカウントをお持ちでないですか？",
-    register: "新規登録",
+    submit: "登録する",
+    loading: "登録中...",
+    hasAccount: "アカウントをお持ちですか？",
+    login: "ログイン",
   },
   en: {
     back: "← Back to Home",
-    subtitle: "Sign In",
+    subtitle: "Create Account",
+    name: "Name",
     email: "Email",
     password: "Password",
-    submit: "Sign In",
-    loading: "Signing in...",
-    noAccount: "Don't have an account?",
-    register: "Register",
+    submit: "Register",
+    loading: "Registering...",
+    hasAccount: "Already have an account?",
+    login: "Sign In",
   },
   vi: {
     back: "← Về trang chủ",
-    subtitle: "Đăng nhập",
+    subtitle: "Đăng ký",
+    name: "Họ tên",
     email: "Email",
     password: "Mật khẩu",
-    submit: "Đăng nhập",
-    loading: "Đang đăng nhập...",
-    noAccount: "Chưa có tài khoản?",
-    register: "Đăng ký",
+    submit: "Đăng ký",
+    loading: "Đang đăng ký...",
+    hasAccount: "Đã có tài khoản?",
+    login: "Đăng nhập",
   },
 };
 
-export default function LoginPage(): ReactElement {
+export default function RegisterPage(): ReactElement {
   const router = useRouter();
   const params = useParams();
   const locale = (params.locale as string) ?? "ja";
   const l = t[locale] ?? t.ja;
 
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -55,11 +57,10 @@ export default function LoginPage(): ReactElement {
     setLoading(true);
     setError(null);
     try {
-      await apiMutate<AuthResponse>("auth/login", "POST", { email, password });
-      router.push("/");
-      router.refresh();
+      await apiMutate("auth/register", "POST", { name, email, password });
+      router.push("/login");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Login failed");
+      setError(err instanceof Error ? err.message : "Registration failed");
     } finally {
       setLoading(false);
     }
@@ -93,13 +94,18 @@ export default function LoginPage(): ReactElement {
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-400">{l.name}</label>
+              <input type="text" required value={name} onChange={(e) => setName(e.target.value)}
+                className="w-full rounded-xl border border-white/10 bg-[#0f1117] px-4 py-3 text-sm text-white placeholder-slate-600 focus:border-cyan-500/50 focus:outline-none focus:ring-1 focus:ring-cyan-500/30 transition" />
+            </div>
+            <div>
               <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-400">{l.email}</label>
               <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com"
                 className="w-full rounded-xl border border-white/10 bg-[#0f1117] px-4 py-3 text-sm text-white placeholder-slate-600 focus:border-cyan-500/50 focus:outline-none focus:ring-1 focus:ring-cyan-500/30 transition" />
             </div>
             <div>
               <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-400">{l.password}</label>
-              <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••"
+              <input type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••"
                 className="w-full rounded-xl border border-white/10 bg-[#0f1117] px-4 py-3 text-sm text-white placeholder-slate-600 focus:border-cyan-500/50 focus:outline-none focus:ring-1 focus:ring-cyan-500/30 transition" />
             </div>
             <button type="submit" disabled={loading}
@@ -109,8 +115,8 @@ export default function LoginPage(): ReactElement {
           </form>
 
           <div className="mt-6 text-center text-sm text-slate-500">
-            {l.noAccount}{" "}
-            <Link href="/register" className="text-cyan-400 transition hover:text-cyan-300">{l.register}</Link>
+            {l.hasAccount}{" "}
+            <Link href="/login" className="text-cyan-400 transition hover:text-cyan-300">{l.login}</Link>
           </div>
         </div>
       </div>

@@ -23,9 +23,8 @@ export default async function LocaleLayout({ children, params }: Props): Promise
   const headersList = headers();
   const pathname = headersList.get("x-pathname") ?? "";
   const isAdmin = pathname.includes("/admin");
-  const isAuth = pathname.includes("/login") || pathname.includes("/register");
 
-  if (isAdmin || isAuth) {
+  if (isAdmin) {
     return (
       <NextIntlClientProvider messages={messages}>
         {children}
