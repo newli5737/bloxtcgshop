@@ -1,81 +1,110 @@
 "use client";
-import { type ReactElement, useState, useEffect } from "react";
+import { type ReactElement, useState, useCallback } from "react";
+import { useAdminCrud } from "../../../../lib/hooks/useAdminCrud";
+import { adminBanners, adminUpload, type AdminBanner, type CreateBannerPayload, type UpdateBannerPayload } from "../../../../lib/fetchers/admin";
+import {
+  AdminPageHeader, AdminCard, Field, Input, Checkbox, FileInput,
+  BtnPrimary, BtnSecondary, BtnAction, LoadingState, ErrorBanner, EmptyState,
+} from "../../../../components/admin/AdminUI";
 
-type Banner = { id: string; imageUrl: string; linkUrl: string | null; sortOrder: number; isActive: boolean; translations: Array<{ title: string | null; locale: string }> };
+const bannerActions = {
+  list: () => adminBanners.list("ja"),
+  create: (d: CreateBannerPayload) => adminBanners.create(d),
+  update: (id: string, d: UpdateBannerPayload) => adminBanners.update(id, d),
+  remove: (id: string) => adminBanners.remove(id),
+};
 
-export default function AdminBanners(): ReactElement {
-  const [banners, setBanners] = useState<Banner[]>([]);
+const initForm = { imageUrl: "", linkUrl: "", sortOrder: 0, isActive: true, titleJa: "", titleVi: "" };
+type FormState = typeof initForm;
+
+export default function AdminBannersPage(): ReactElement {
+  const { items, loading, error, saving, create, update, remove } = useAdminCrud(bannerActions);
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ imageUrl: "", linkUrl: "", sortOrder: 0, titleJa: "", titleVi: "" });
-  const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3041/v1";
+  const [editId, setEditId] = useState<string | null>(null);
+  const [form, setForm] = useState<FormState>(initForm);
+  const [uploading, setUploading] = useState(false);
 
-  const load = () => {
-    fetch(`${apiBase}/banners/all`, { credentials: "include" })
-      .then((r) => r.json())
-      .then((d) => setBanners(d.data ?? d ?? []))
-      .catch(() => {});
+  const set = useCallback((patch: Partial<FormState>) => setForm((f) => ({ ...f, ...patch })), []);
+
+  const openCreate = () => { setEditId(null); setForm(initForm); setShowForm(true); };
+  const openEdit = (b: AdminBanner) => {
+    setEditId(b.id);
+    setForm({
+      imageUrl: b.imageUrl, linkUrl: b.linkUrl ?? "", sortOrder: b.sortOrder, isActive: b.isActive,
+      titleJa: b.translations.find((t) => t.locale === "ja")?.title ?? "",
+      titleVi: b.translations.find((t) => t.locale === "vi")?.title ?? "",
+    });
+    setShowForm(true);
   };
-  useEffect(load, [apiBase]);
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const fd = new FormData();
-    fd.append("file", file);
-    const res = await fetch(`${apiBase}/admin/upload`, { method: "POST", body: fd, credentials: "include" });
-    const data = await res.json();
-    setForm({ ...form, imageUrl: data.data?.url ?? data.url ?? "" });
+    const file = e.target.files?.[0]; if (!file) return;
+    setUploading(true);
+    try { const res = await adminUpload.file(file); set({ imageUrl: res.url }); } catch { /* empty */ }
+    setUploading(false);
   };
 
   const handleSave = async () => {
-    const body = { imageUrl: form.imageUrl, linkUrl: form.linkUrl || undefined, sortOrder: form.sortOrder, translations: [{ locale: "ja", title: form.titleJa }, { locale: "vi", title: form.titleVi }] };
-    await fetch(`${apiBase}/banners`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body), credentials: "include" });
-    setShowForm(false); load();
+    const payload: CreateBannerPayload = {
+      imageUrl: form.imageUrl, linkUrl: form.linkUrl || undefined, sortOrder: form.sortOrder, isActive: form.isActive,
+      translations: [{ locale: "ja", title: form.titleJa }, { locale: "vi", title: form.titleVi }],
+    };
+    if (editId) { await update(editId, payload); } else { await create(payload); }
+    setShowForm(false); setEditId(null);
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Xác nhận xóa banner?")) return;
-    await fetch(`${apiBase}/banners/${id}`, { method: "DELETE", credentials: "include" });
-    load();
+    if (!confirm("Xóa banner này?")) return;
+    await remove(id);
   };
+
+  if (loading) return <LoadingState />;
 
   return (
     <div>
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-white">🖼️ Quản lý Banner</h1>
-        <button onClick={() => { setForm({ imageUrl: "", linkUrl: "", sortOrder: 0, titleJa: "", titleVi: "" }); setShowForm(true); }} className="rounded-xl bg-cyan-600 px-4 py-2 text-sm font-semibold text-white hover:bg-cyan-500">+ Thêm banner</button>
-      </div>
+      {error && <ErrorBanner message={error} onDismiss={() => {}} />}
+
+      <AdminPageHeader title="🖼️ Quản lý Banner" count={items.length}>
+        <BtnPrimary onClick={openCreate}>+ Thêm banner</BtnPrimary>
+      </AdminPageHeader>
+
       {showForm && (
-        <div className="mb-6 rounded-2xl border border-white/10 bg-[#1a1d2e] p-5">
-          <div className="grid grid-cols-2 gap-3">
-            <div className="col-span-2">
-              <label className="mb-1 block text-xs text-slate-400">Upload ảnh</label>
-              <input type="file" accept="image/*" onChange={handleUpload} className="text-sm text-slate-400" />
-              {form.imageUrl && <img src={form.imageUrl} alt="" className="mt-2 h-24 rounded-lg" />}
+        <AdminCard className="mb-6">
+          <h3 className="mb-5 text-lg font-bold text-white">{editId ? "✏️ Sửa banner" : "➕ Thêm banner"}</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="md:col-span-2">
+              <FileInput label="Ảnh banner" onChange={handleUpload} preview={form.imageUrl || null} />
+              {uploading && <p className="text-xs text-cyan-400 mt-1">Đang tải lên...</p>}
             </div>
-            <input placeholder="Link URL" value={form.linkUrl} onChange={(e) => setForm({ ...form, linkUrl: e.target.value })} className="rounded-lg border border-white/10 bg-[#0f1117] px-3 py-2 text-sm text-white" />
-            <input placeholder="Thứ tự" type="number" value={form.sortOrder} onChange={(e) => setForm({ ...form, sortOrder: Number(e.target.value) })} className="rounded-lg border border-white/10 bg-[#0f1117] px-3 py-2 text-sm text-white" />
-            <input placeholder="Tiêu đề (日本語)" value={form.titleJa} onChange={(e) => setForm({ ...form, titleJa: e.target.value })} className="rounded-lg border border-white/10 bg-[#0f1117] px-3 py-2 text-sm text-white" />
-            <input placeholder="Tiêu đề (Tiếng Việt)" value={form.titleVi} onChange={(e) => setForm({ ...form, titleVi: e.target.value })} className="rounded-lg border border-white/10 bg-[#0f1117] px-3 py-2 text-sm text-white" />
+            <Field label="Link URL"><Input placeholder="https://..." value={form.linkUrl} onChange={(e) => set({ linkUrl: e.target.value })} /></Field>
+            <Field label="Thứ tự"><Input type="number" value={form.sortOrder} onChange={(e) => set({ sortOrder: Number(e.target.value) })} /></Field>
+            <Field label="Tiêu đề (日本語)"><Input value={form.titleJa} onChange={(e) => set({ titleJa: e.target.value })} /></Field>
+            <Field label="Tiêu đề (Tiếng Việt)"><Input value={form.titleVi} onChange={(e) => set({ titleVi: e.target.value })} /></Field>
+            <Checkbox label="Đang hiển thị" checked={form.isActive} onChange={(v) => set({ isActive: v })} />
           </div>
-          <div className="mt-4 flex gap-2">
-            <button onClick={handleSave} className="rounded-lg bg-cyan-600 px-4 py-2 text-sm font-semibold text-white hover:bg-cyan-500">Lưu</button>
-            <button onClick={() => setShowForm(false)} className="rounded-lg bg-slate-700 px-4 py-2 text-sm text-slate-300 hover:bg-slate-600">Hủy</button>
+          <div className="mt-5 flex gap-3">
+            <BtnPrimary onClick={handleSave} disabled={saving}>{saving ? "Đang lưu..." : "💾 Lưu"}</BtnPrimary>
+            <BtnSecondary onClick={() => setShowForm(false)}>Hủy</BtnSecondary>
           </div>
-        </div>
+        </AdminCard>
       )}
+
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {banners.map((b) => (
-          <div key={b.id} className="overflow-hidden rounded-2xl border border-white/[0.06] bg-[#13151d]">
+        {items.map((b) => (
+          <div key={b.id} className="group overflow-hidden rounded-2xl border border-white/[0.06] bg-[#13151d] transition hover:border-white/10">
             <img src={b.imageUrl} alt="" className="h-40 w-full object-cover" />
             <div className="p-4">
               <p className="text-sm font-medium text-white">{b.translations[0]?.title ?? "Banner"}</p>
-              <p className="mt-1 text-xs text-slate-400">Thứ tự: {b.sortOrder} | {b.isActive ? "✅ Đang hiển thị" : "❌ Ẩn"}</p>
-              <button onClick={() => handleDelete(b.id)} className="mt-2 text-xs text-red-400 hover:text-red-300">Xóa</button>
+              <p className="mt-1 text-xs text-slate-400">Thứ tự: {b.sortOrder} | {b.isActive ? "✅ Hiển thị" : "❌ Ẩn"}</p>
+              <div className="mt-3 flex gap-2 opacity-0 group-hover:opacity-100 transition">
+                <BtnAction variant="edit" onClick={() => openEdit(b)}>Sửa</BtnAction>
+                <BtnAction variant="delete" onClick={() => handleDelete(b.id)}>Xóa</BtnAction>
+              </div>
             </div>
           </div>
         ))}
       </div>
+      {items.length === 0 && <EmptyState message="Chưa có banner nào" />}
     </div>
   );
 }
