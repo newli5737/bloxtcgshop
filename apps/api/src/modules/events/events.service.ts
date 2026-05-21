@@ -7,6 +7,7 @@ import {
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import { EventStatus } from "@pokemart/database";
 import { PrismaService } from "../../prisma/prisma.service";
+import type { EventResponse, EventRegistrationResponse, EventDrawResult, DeleteResult } from "../../common/types/responses";
 import type { CreateEventDto } from "./dto/create-event.dto";
 import type { UpdateEventDto } from "./dto/update-event.dto";
 
@@ -17,25 +18,26 @@ export class EventsService {
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
-  async list(): Promise<unknown[]> {
-    return this.prisma.event.findMany({
+  async list(): Promise<EventResponse[]> {
+    const result = await this.prisma.event.findMany({
       where: { status: { not: EventStatus.CANCELLED } },
       orderBy: { createdAt: "desc" },
       include: { _count: { select: { registrations: true } } },
     });
+    return result as EventResponse[];
   }
 
-  async getBySlug(slug: string): Promise<unknown> {
+  async getBySlug(slug: string): Promise<EventResponse> {
     const event = await this.prisma.event.findUnique({
       where: { slug },
       include: { _count: { select: { registrations: true } } },
     });
     if (!event) throw new NotFoundException("Event not found");
-    return event;
+    return event as EventResponse;
   }
 
-  async create(dto: CreateEventDto): Promise<unknown> {
-    return this.prisma.event.create({
+  async create(dto: CreateEventDto): Promise<EventResponse> {
+    const created = await this.prisma.event.create({
       data: {
         slug: dto.slug,
         title: dto.title,
@@ -46,11 +48,12 @@ export class EventsService {
         drawDate: dto.drawDate ? new Date(dto.drawDate) : null,
       },
     });
+    return created as EventResponse;
   }
 
-  async update(id: string, dto: UpdateEventDto): Promise<unknown> {
+  async update(id: string, dto: UpdateEventDto): Promise<EventResponse> {
     try {
-      return await this.prisma.event.update({
+      const updated = await this.prisma.event.update({
         where: { id },
         data: {
           title: dto.title,
@@ -62,12 +65,13 @@ export class EventsService {
           drawDate: dto.drawDate ? new Date(dto.drawDate) : undefined,
         },
       });
+      return updated as EventResponse;
     } catch {
       throw new NotFoundException("Event not found");
     }
   }
 
-  async remove(id: string): Promise<{ id: string }> {
+  async remove(id: string): Promise<DeleteResult> {
     try {
       await this.prisma.event.delete({ where: { id } });
       return { id };
@@ -83,19 +87,16 @@ export class EventsService {
       throw new BadRequestException("Event is not open for registration");
     }
 
-    // Check if already registered
     const existing = await this.prisma.eventRegistration.findUnique({
       where: { eventId_userId: { eventId, userId } },
     });
     if (existing) throw new ConflictException("Already registered for this event");
 
-    // Check capacity
     const count = await this.prisma.eventRegistration.count({ where: { eventId } });
     if (count >= event.maxParticipants) {
       throw new BadRequestException("Event is full");
     }
 
-    // Generate unique lucky number
     const existingNumbers = await this.prisma.eventRegistration.findMany({
       where: { eventId },
       select: { luckyNumber: true },
@@ -119,23 +120,24 @@ export class EventsService {
     return { luckyNumber: registration.luckyNumber };
   }
 
-  async getMyRegistration(eventId: string, userId: string): Promise<unknown> {
+  async getMyRegistration(eventId: string, userId: string): Promise<EventRegistrationResponse> {
     const reg = await this.prisma.eventRegistration.findUnique({
       where: { eventId_userId: { eventId, userId } },
     });
     if (!reg) throw new NotFoundException("Not registered for this event");
-    return reg;
+    return reg as EventRegistrationResponse;
   }
 
-  async getRegistrations(eventId: string): Promise<unknown[]> {
-    return this.prisma.eventRegistration.findMany({
+  async getRegistrations(eventId: string): Promise<EventRegistrationResponse[]> {
+    const result = await this.prisma.eventRegistration.findMany({
       where: { eventId },
       include: { user: { select: { id: true, email: true, name: true } } },
       orderBy: { createdAt: "asc" },
     });
+    return result as EventRegistrationResponse[];
   }
 
-  async draw(eventId: string): Promise<{ winningNumber: number; winner: unknown }> {
+  async draw(eventId: string): Promise<EventDrawResult> {
     const event = await this.prisma.event.findUnique({
       where: { id: eventId },
       include: { registrations: true },
@@ -148,12 +150,10 @@ export class EventsService {
       throw new BadRequestException("No registrations yet");
     }
 
-    // Pick random winner
     const randomIndex = Math.floor(Math.random() * event.registrations.length);
     const winnerReg = event.registrations[randomIndex];
     const winningNumber = winnerReg.luckyNumber;
 
-    // Update event & mark winner
     await this.prisma.$transaction([
       this.prisma.event.update({
         where: { id: eventId },

@@ -3,6 +3,7 @@ import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
 import { Role } from "@pokemart/database";
 import { Public } from "../../common/decorators/public.decorator";
 import { Roles } from "../../common/decorators/roles.decorator";
+import type { BannerResponse, CreateBannerDto, UpdateBannerDto, DeleteResult } from "../../common/types/responses";
 import { BannersService } from "./banners.service";
 
 @ApiTags("banners")
@@ -12,35 +13,35 @@ export class BannersController {
 
   @Public()
   @Get()
-  list(@Query("locale") locale?: string): Promise<unknown[]> {
+  list(@Query("locale") locale?: string): Promise<BannerResponse[]> {
     return this.banners.active(locale ?? "ja");
   }
 
   @ApiBearerAuth()
   @Roles(Role.ADMIN)
   @Get("all")
-  listAll(@Query("locale") locale?: string): Promise<unknown[]> {
+  listAll(@Query("locale") locale?: string): Promise<BannerResponse[]> {
     return this.banners.listAll(locale ?? "ja");
   }
 
   @ApiBearerAuth()
   @Roles(Role.ADMIN)
   @Post()
-  create(@Body() dto: { imageUrl: string; linkUrl?: string; sortOrder?: number; isActive?: boolean; startsAt?: string; endsAt?: string; translations: Array<{ locale: string; title?: string; altText?: string }> }): Promise<unknown> {
+  create(@Body() dto: CreateBannerDto): Promise<BannerResponse> {
     return this.banners.create(dto);
   }
 
   @ApiBearerAuth()
   @Roles(Role.ADMIN)
   @Patch(":id")
-  update(@Param("id") id: string, @Body() dto: { imageUrl?: string; linkUrl?: string; sortOrder?: number; isActive?: boolean; translations?: Array<{ locale: string; title?: string; altText?: string }> }): Promise<unknown> {
+  update(@Param("id") id: string, @Body() dto: UpdateBannerDto): Promise<BannerResponse> {
     return this.banners.update(id, dto);
   }
 
   @ApiBearerAuth()
   @Roles(Role.ADMIN)
   @Delete(":id")
-  remove(@Param("id") id: string): Promise<unknown> {
+  remove(@Param("id") id: string): Promise<DeleteResult> {
     return this.banners.remove(id);
   }
 }

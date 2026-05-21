@@ -3,6 +3,7 @@ import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
 import { Role } from "@pokemart/database";
 import { Public } from "../../common/decorators/public.decorator";
 import { Roles } from "../../common/decorators/roles.decorator";
+import type { NewsResponse, CreateNewsDto, UpdateNewsDto, DeleteResult, PaginatedResponse } from "../../common/types/responses";
 import { NewsService } from "./news.service";
 
 @ApiTags("news")
@@ -16,13 +17,13 @@ export class NewsController {
     @Query("locale") locale?: string,
     @Query("page") page?: string,
     @Query("limit") limit?: string,
-  ): Promise<unknown> {
+  ): Promise<PaginatedResponse<NewsResponse>> {
     return this.news.list(locale ?? "ja", Number(page ?? 1) || 1, Number(limit ?? 10) || 10);
   }
 
   @Public()
   @Get(":slug")
-  bySlug(@Param("slug") slug: string, @Query("locale") locale?: string): Promise<unknown> {
+  bySlug(@Param("slug") slug: string, @Query("locale") locale?: string): Promise<NewsResponse> {
     return this.news.bySlug(slug, locale ?? "ja");
   }
 
@@ -33,28 +34,28 @@ export class NewsController {
     @Query("locale") locale?: string,
     @Query("page") page?: string,
     @Query("limit") limit?: string,
-  ): Promise<unknown> {
-    return this.news.listAll(locale ?? "ja", Number(page ?? 1) || 1, Number(limit ?? 50) || 50);
+  ): Promise<PaginatedResponse<NewsResponse>> {
+    return this.news.listAll(locale ?? "vi", Number(page ?? 1) || 1, Number(limit ?? 50) || 50);
   }
 
   @ApiBearerAuth()
   @Roles(Role.ADMIN)
   @Post()
-  create(@Body() dto: { slug: string; isPublished?: boolean; translations: Array<{ locale: string; title: string; content?: string }> }): Promise<unknown> {
+  create(@Body() dto: CreateNewsDto): Promise<NewsResponse> {
     return this.news.create(dto);
   }
 
   @ApiBearerAuth()
   @Roles(Role.ADMIN)
   @Patch(":id")
-  update(@Param("id") id: string, @Body() dto: { slug?: string; isPublished?: boolean; translations?: Array<{ locale: string; title: string; content?: string }> }): Promise<unknown> {
+  update(@Param("id") id: string, @Body() dto: UpdateNewsDto): Promise<NewsResponse> {
     return this.news.update(id, dto);
   }
 
   @ApiBearerAuth()
   @Roles(Role.ADMIN)
   @Delete(":id")
-  remove(@Param("id") id: string): Promise<unknown> {
+  remove(@Param("id") id: string): Promise<DeleteResult> {
     return this.news.remove(id);
   }
 }

@@ -1,13 +1,14 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "../../prisma/prisma.service";
+import type { BannerResponse, CreateBannerDto, UpdateBannerDto, DeleteResult } from "../../common/types/responses";
 
 @Injectable()
 export class BannersService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async active(locale = "ja"): Promise<unknown[]> {
+  async active(locale = "ja"): Promise<BannerResponse[]> {
     const now = new Date();
-    return this.prisma.banner.findMany({
+    const result = await this.prisma.banner.findMany({
       where: {
         isActive: true,
         AND: [
@@ -18,17 +19,19 @@ export class BannersService {
       orderBy: { sortOrder: "asc" },
       include: { translations: { where: { locale } } },
     });
+    return result as BannerResponse[];
   }
 
-  async listAll(locale = "ja"): Promise<unknown[]> {
-    return this.prisma.banner.findMany({
+  async listAll(locale = "ja"): Promise<BannerResponse[]> {
+    const result = await this.prisma.banner.findMany({
       orderBy: { sortOrder: "asc" },
       include: { translations: { where: { locale } } },
     });
+    return result as BannerResponse[];
   }
 
-  async create(dto: { imageUrl: string; linkUrl?: string; sortOrder?: number; isActive?: boolean; startsAt?: string; endsAt?: string; translations: Array<{ locale: string; title?: string; altText?: string }> }): Promise<unknown> {
-    return this.prisma.banner.create({
+  async create(dto: CreateBannerDto): Promise<BannerResponse> {
+    const created = await this.prisma.banner.create({
       data: {
         imageUrl: dto.imageUrl,
         linkUrl: dto.linkUrl,
@@ -40,14 +43,11 @@ export class BannersService {
       },
       include: { translations: true },
     });
+    return created as BannerResponse;
   }
 
-  async update(id: string, dto: { imageUrl?: string; linkUrl?: string; sortOrder?: number; isActive?: boolean; translations?: Array<{ locale: string; title?: string; altText?: string }> }): Promise<unknown> {
+  async update(id: string, dto: UpdateBannerDto): Promise<BannerResponse> {
     const { translations, ...data } = dto;
-    const banner = await this.prisma.banner.update({
-      where: { id },
-      data,
-    });
     if (translations?.length) {
       for (const t of translations) {
         await this.prisma.bannerTranslation.upsert({
@@ -57,10 +57,15 @@ export class BannersService {
         });
       }
     }
-    return banner;
+    const banner = await this.prisma.banner.update({
+      where: { id },
+      data,
+      include: { translations: true },
+    });
+    return banner as BannerResponse;
   }
 
-  async remove(id: string): Promise<{ id: string }> {
+  async remove(id: string): Promise<DeleteResult> {
     try {
       await this.prisma.banner.delete({ where: { id } });
       return { id };

@@ -2,6 +2,7 @@ import { Body, Controller, Post, Req, Res } from "@nestjs/common";
 import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
 import { Response, Request } from "express";
 import { ConfigService } from "@nestjs/config";
+import { Role } from "@pokemart/database";
 import { CurrentUser, type AuthUser } from "../../common/decorators/current-user.decorator";
 import { Public } from "../../common/decorators/public.decorator";
 import { AuthService, type TokenPair } from "./auth.service";
@@ -18,7 +19,7 @@ export class AuthController {
 
   @Public()
   @Post("register")
-  register(@Body() dto: RegisterDto): Promise<unknown> {
+  register(@Body() dto: RegisterDto): Promise<{ user: { id: string; email: string; name: string | null; role: Role } }> {
     return this.auth.register(dto);
   }
 
@@ -27,7 +28,7 @@ export class AuthController {
   async login(
     @Body() dto: LoginDto,
     @Res({ passthrough: true }) res: Response,
-  ): Promise<unknown> {
+  ): Promise<{ user: { id: string; email: string; name: string | null; role: Role; locale: string } }> {
     const { tokens, user } = await this.auth.login(dto);
     this.setTokenCookies(res, tokens);
     return { user };
@@ -38,7 +39,7 @@ export class AuthController {
   async refresh(
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
-  ): Promise<unknown> {
+  ): Promise<{ ok: true } | { data: null; meta: null; error: { code: string; message: string } }> {
     const refreshToken = (req as Request & { cookies?: Record<string, string> }).cookies?.refresh_token;
     if (!refreshToken) {
       res.status(401);
@@ -55,7 +56,7 @@ export class AuthController {
     @CurrentUser() user: AuthUser,
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
-  ): Promise<unknown> {
+  ): Promise<{ ok: true }> {
     const refreshToken = (req as Request & { cookies?: Record<string, string> }).cookies?.refresh_token;
     await this.auth.logout(user.userId, refreshToken);
     this.clearTokenCookies(res);

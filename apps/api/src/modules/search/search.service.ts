@@ -1,5 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { PrismaService } from "../../prisma/prisma.service";
+import type { PaginatedResponse, ProductListItem, SearchSuggestion } from "../../common/types/responses";
 import type { FilterProductsDto } from "../products/dto/filter-products.dto";
 import { ProductsService } from "../products/products.service";
 
@@ -10,19 +11,15 @@ export class SearchService {
     private readonly products: ProductsService,
   ) {}
 
-  async search(q: string, locale = "ja", query: FilterProductsDto): Promise<unknown> {
+  async search(q: string, locale = "ja", query: FilterProductsDto): Promise<PaginatedResponse<ProductListItem>> {
     return this.products.list({ ...query, q, locale });
   }
 
-  async suggestions(q: string, locale = "ja"): Promise<unknown[]> {
+  async suggestions(q: string, locale = "ja"): Promise<SearchSuggestion[]> {
     const term = q.trim();
-    if (term.length < 2) {
-      return [];
-    }
+    if (term.length < 2) return [];
     const products = await this.prisma.product.findMany({
-      where: {
-        translations: { some: { locale, name: { contains: term, mode: "insensitive" } } },
-      },
+      where: { translations: { some: { locale, name: { contains: term, mode: "insensitive" } } } },
       take: 8,
       include: { translations: { where: { locale } } },
     });

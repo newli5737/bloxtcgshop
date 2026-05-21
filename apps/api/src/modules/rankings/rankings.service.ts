@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { PrismaService } from "../../prisma/prisma.service";
 
-type RankRow = {
+export type RankRow = {
   slug: string;
   name: string;
   price: number;

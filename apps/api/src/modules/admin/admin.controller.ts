@@ -4,6 +4,7 @@ import { FileInterceptor } from "@nestjs/platform-express";
 import { Role } from "@pokemart/database";
 import { Roles } from "../../common/decorators/roles.decorator";
 import { PrismaService } from "../../prisma/prisma.service";
+import type { AdminStats, UploadResult } from "../../common/types/responses";
 import * as fs from "fs";
 import * as path from "path";
 
@@ -15,7 +16,7 @@ export class AdminController {
 
   @Roles(Role.ADMIN)
   @Get("stats")
-  async stats(): Promise<unknown> {
+  async stats(): Promise<AdminStats> {
     const oneWeekAgo = new Date(Date.now() - 7 * 86400000);
     const [totalProducts, totalCategories, outOfStock, newThisWeek] = await Promise.all([
       this.prisma.product.count(),
@@ -29,7 +30,7 @@ export class AdminController {
   @Roles(Role.ADMIN)
   @Post("upload")
   @UseInterceptors(FileInterceptor("file"))
-  async upload(@UploadedFile() file: Express.Multer.File): Promise<{ url: string }> {
+  async upload(@UploadedFile() file: Express.Multer.File): Promise<UploadResult> {
     const uploadDir = path.join(process.cwd(), "uploads");
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir, { recursive: true });
