@@ -3,7 +3,7 @@ import { type ReactElement, useState, useCallback } from "react";
 import { useAdminCrud } from "../../../../lib/hooks/useAdminCrud";
 import { adminNews, type AdminNews, type CreateNewsPayload, type UpdateNewsPayload } from "../../../../lib/fetchers/admin";
 import {
-  AdminPageHeader, AdminCard, AdminTable, Field, Input, TextArea, Checkbox,
+  AdminPageHeader, Modal, AdminTable, Field, Input, TextArea, Checkbox,
   BtnPrimary, BtnSecondary, BtnAction, LoadingState, EmptyState, ErrorBanner,
 } from "../../../../components/admin/AdminUI";
 
@@ -67,13 +67,9 @@ export default function AdminNewsPage(): ReactElement {
         <BtnPrimary onClick={openCreate}>+ Thêm bài viết</BtnPrimary>
       </AdminPageHeader>
 
-      {/* Detail panel */}
-      {detail && (
-        <AdminCard className="mb-6">
-          <div className="flex items-start justify-between mb-4">
-            <h3 className="text-lg font-bold text-white">Chi tiết bài viết</h3>
-            <button onClick={() => setDetail(null)} className="text-slate-400 hover:text-white text-xl">✕</button>
-          </div>
+      {/* Detail dialog */}
+      <Modal open={!!detail} onClose={() => setDetail(null)} title="Chi tiết bài viết" wide>
+        {detail && (
           <div className="space-y-3">
             <h2 className="text-xl font-bold text-white">{detail.translations[0]?.title ?? detail.slug}</h2>
             <div className="grid grid-cols-2 gap-3 text-sm">
@@ -93,27 +89,24 @@ export default function AdminNewsPage(): ReactElement {
               <BtnAction variant="delete" onClick={() => handleDelete(detail.id)}>🗑️ Xóa</BtnAction>
             </div>
           </div>
-        </AdminCard>
-      )}
+        )}
+      </Modal>
 
-      {/* Form */}
-      {showForm && (
-        <AdminCard className="mb-6">
-          <h3 className="mb-5 text-lg font-bold text-white">{editId ? "✏️ Sửa bài viết" : "➕ Thêm bài viết"}</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Field label="Slug"><Input placeholder="vd: new-expansion-release" value={form.slug} onChange={(e) => set({ slug: e.target.value })} /></Field>
-            <div className="flex items-end pb-1"><Checkbox label="Xuất bản ngay" checked={form.isPublished} onChange={(v) => set({ isPublished: v })} /></div>
-            <Field label="Tiêu đề (日本語)"><Input value={form.titleJa} onChange={(e) => set({ titleJa: e.target.value })} /></Field>
-            <Field label="Tiêu đề (Tiếng Việt)"><Input value={form.titleVi} onChange={(e) => set({ titleVi: e.target.value })} /></Field>
-            <div className="md:col-span-2"><Field label="Nội dung (日本語)"><TextArea rows={5} value={form.contentJa} onChange={(e) => set({ contentJa: e.target.value })} /></Field></div>
-            <div className="md:col-span-2"><Field label="Nội dung (Tiếng Việt)"><TextArea rows={5} value={form.contentVi} onChange={(e) => set({ contentVi: e.target.value })} /></Field></div>
-          </div>
-          <div className="mt-5 flex gap-3">
-            <BtnPrimary onClick={handleSave} disabled={saving}>{saving ? "Đang lưu..." : "💾 Lưu"}</BtnPrimary>
-            <BtnSecondary onClick={() => setShowForm(false)}>Hủy</BtnSecondary>
-          </div>
-        </AdminCard>
-      )}
+      {/* Form dialog */}
+      <Modal open={showForm} onClose={() => setShowForm(false)} title={editId ? "✏️ Sửa bài viết" : "➕ Thêm bài viết"} wide>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Field label="Slug"><Input placeholder="vd: new-expansion-release" value={form.slug} onChange={(e) => set({ slug: e.target.value })} /></Field>
+          <div className="flex items-end pb-1"><Checkbox label="Xuất bản ngay" checked={form.isPublished} onChange={(v) => set({ isPublished: v })} /></div>
+          <Field label="Tiêu đề (日本語)"><Input value={form.titleJa} onChange={(e) => set({ titleJa: e.target.value })} /></Field>
+          <Field label="Tiêu đề (Tiếng Việt)"><Input value={form.titleVi} onChange={(e) => set({ titleVi: e.target.value })} /></Field>
+          <div className="md:col-span-2"><Field label="Nội dung (日本語)"><TextArea rows={5} value={form.contentJa} onChange={(e) => set({ contentJa: e.target.value })} /></Field></div>
+          <div className="md:col-span-2"><Field label="Nội dung (Tiếng Việt)"><TextArea rows={5} value={form.contentVi} onChange={(e) => set({ contentVi: e.target.value })} /></Field></div>
+        </div>
+        <div className="mt-5 flex gap-3 border-t border-white/[0.06] pt-5">
+          <BtnPrimary onClick={handleSave} disabled={saving}>{saving ? "Đang lưu..." : "💾 Lưu"}</BtnPrimary>
+          <BtnSecondary onClick={() => setShowForm(false)}>Hủy</BtnSecondary>
+        </div>
+      </Modal>
 
       {/* Table */}
       <AdminTable headers={["Tiêu đề", "Slug", "Trạng thái", "Ngày", "Thao tác"]}>

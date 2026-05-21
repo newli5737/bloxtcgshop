@@ -21,6 +21,32 @@ export function AdminCard({ children, className = "" }: { children: ReactNode; c
   return <div className={`rounded-2xl border border-white/10 bg-[#1a1d2e] p-6 ${className}`}>{children}</div>;
 }
 
+// ─── Modal Dialog ───
+export function Modal({ open, onClose, title, children, wide }: { open: boolean; onClose: () => void; title: string; children: ReactNode; wide?: boolean }): ReactElement | null {
+  if (!open) return null;
+  return (
+    <div className="fixed inset-0 z-50 flex items-start justify-center pt-[5vh] pb-[5vh]" onClick={onClose}>
+      {/* Backdrop */}
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+      {/* Dialog */}
+      <div
+        className={`relative z-10 flex max-h-[90vh] flex-col rounded-2xl border border-white/10 bg-[#161829] shadow-2xl shadow-black/50 ${wide ? "w-full max-w-3xl" : "w-full max-w-2xl"}`}
+        onClick={(e) => e.stopPropagation()}
+        style={{ animation: "modalIn 0.2s ease-out" }}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between border-b border-white/[0.06] px-6 py-4">
+          <h3 className="text-lg font-bold text-white">{title}</h3>
+          <button onClick={onClose} className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-white/[0.06] hover:text-white transition">✕</button>
+        </div>
+        {/* Body — scrollable */}
+        <div className="flex-1 overflow-y-auto px-6 py-5">{children}</div>
+      </div>
+      <style>{`@keyframes modalIn { from { opacity: 0; transform: translateY(-16px) scale(0.97); } to { opacity: 1; transform: translateY(0) scale(1); } }`}</style>
+    </div>
+  );
+}
+
 // ─── Form ───
 const inputBase = "w-full rounded-lg border border-white/10 bg-[#0f1117] px-3 py-2.5 text-sm text-white placeholder-slate-500 focus:border-cyan-500/50 focus:outline-none focus:ring-1 focus:ring-cyan-500/30 transition";
 

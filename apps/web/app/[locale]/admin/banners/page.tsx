@@ -3,7 +3,7 @@ import { type ReactElement, useState, useCallback } from "react";
 import { useAdminCrud } from "../../../../lib/hooks/useAdminCrud";
 import { adminBanners, adminUpload, type AdminBanner, type CreateBannerPayload, type UpdateBannerPayload } from "../../../../lib/fetchers/admin";
 import {
-  AdminPageHeader, AdminCard, Field, Input, Checkbox, FileInput,
+  AdminPageHeader, Modal, Field, Input, Checkbox, FileInput,
   BtnPrimary, BtnSecondary, BtnAction, LoadingState, ErrorBanner, EmptyState,
 } from "../../../../components/admin/AdminUI";
 
@@ -68,26 +68,23 @@ export default function AdminBannersPage(): ReactElement {
         <BtnPrimary onClick={openCreate}>+ Thêm banner</BtnPrimary>
       </AdminPageHeader>
 
-      {showForm && (
-        <AdminCard className="mb-6">
-          <h3 className="mb-5 text-lg font-bold text-white">{editId ? "✏️ Sửa banner" : "➕ Thêm banner"}</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="md:col-span-2">
-              <FileInput label="Ảnh banner" onChange={handleUpload} preview={form.imageUrl || null} />
-              {uploading && <p className="text-xs text-cyan-400 mt-1">Đang tải lên...</p>}
-            </div>
-            <Field label="Link URL"><Input placeholder="https://..." value={form.linkUrl} onChange={(e) => set({ linkUrl: e.target.value })} /></Field>
-            <Field label="Thứ tự"><Input type="number" value={form.sortOrder} onChange={(e) => set({ sortOrder: Number(e.target.value) })} /></Field>
-            <Field label="Tiêu đề (日本語)"><Input value={form.titleJa} onChange={(e) => set({ titleJa: e.target.value })} /></Field>
-            <Field label="Tiêu đề (Tiếng Việt)"><Input value={form.titleVi} onChange={(e) => set({ titleVi: e.target.value })} /></Field>
-            <Checkbox label="Đang hiển thị" checked={form.isActive} onChange={(v) => set({ isActive: v })} />
+      <Modal open={showForm} onClose={() => setShowForm(false)} title={editId ? "✏️ Sửa banner" : "➕ Thêm banner"}>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="md:col-span-2">
+            <FileInput label="Ảnh banner" onChange={handleUpload} preview={form.imageUrl || null} />
+            {uploading && <p className="text-xs text-cyan-400 mt-1">Đang tải lên...</p>}
           </div>
-          <div className="mt-5 flex gap-3">
-            <BtnPrimary onClick={handleSave} disabled={saving}>{saving ? "Đang lưu..." : "💾 Lưu"}</BtnPrimary>
-            <BtnSecondary onClick={() => setShowForm(false)}>Hủy</BtnSecondary>
-          </div>
-        </AdminCard>
-      )}
+          <Field label="Link URL"><Input placeholder="https://..." value={form.linkUrl} onChange={(e) => set({ linkUrl: e.target.value })} /></Field>
+          <Field label="Thứ tự"><Input type="number" value={form.sortOrder} onChange={(e) => set({ sortOrder: Number(e.target.value) })} /></Field>
+          <Field label="Tiêu đề (日本語)"><Input value={form.titleJa} onChange={(e) => set({ titleJa: e.target.value })} /></Field>
+          <Field label="Tiêu đề (Tiếng Việt)"><Input value={form.titleVi} onChange={(e) => set({ titleVi: e.target.value })} /></Field>
+          <Checkbox label="Đang hiển thị" checked={form.isActive} onChange={(v) => set({ isActive: v })} />
+        </div>
+        <div className="mt-5 flex gap-3 border-t border-white/[0.06] pt-5">
+          <BtnPrimary onClick={handleSave} disabled={saving}>{saving ? "Đang lưu..." : "💾 Lưu"}</BtnPrimary>
+          <BtnSecondary onClick={() => setShowForm(false)}>Hủy</BtnSecondary>
+        </div>
+      </Modal>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {items.map((b) => (

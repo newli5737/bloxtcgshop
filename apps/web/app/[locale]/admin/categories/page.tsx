@@ -3,7 +3,7 @@ import { type ReactElement, useState, useCallback } from "react";
 import { useAdminCrud } from "../../../../lib/hooks/useAdminCrud";
 import { adminCategories, type AdminCategory, type CreateCategoryPayload, type UpdateCategoryPayload } from "../../../../lib/fetchers/admin";
 import {
-  AdminPageHeader, AdminCard, Field, Input,
+  AdminPageHeader, Modal, Field, Input,
   BtnPrimary, BtnSecondary, BtnAction, LoadingState, ErrorBanner,
 } from "../../../../components/admin/AdminUI";
 
@@ -78,22 +78,19 @@ export default function AdminCategoriesPage(): ReactElement {
         <BtnPrimary onClick={() => openCreate()}>+ Thêm danh mục</BtnPrimary>
       </AdminPageHeader>
 
-      {showForm && (
-        <AdminCard className="mb-6">
-          <h3 className="mb-5 text-lg font-bold text-white">{editId ? "✏️ Sửa danh mục" : "➕ Thêm danh mục"}</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Field label="Slug"><Input placeholder="vd: booster-packs" value={form.slug} onChange={(e) => set({ slug: e.target.value })} /></Field>
-            <Field label="Thứ tự sắp xếp"><Input type="number" value={form.sortOrder} onChange={(e) => set({ sortOrder: Number(e.target.value) })} /></Field>
-            <Field label="Tên (日本語)"><Input value={form.nameJa} onChange={(e) => set({ nameJa: e.target.value })} /></Field>
-            <Field label="Tên (Tiếng Việt)"><Input value={form.nameVi} onChange={(e) => set({ nameVi: e.target.value })} /></Field>
-            <Field label="Icon URL"><Input placeholder="https://..." value={form.iconUrl} onChange={(e) => set({ iconUrl: e.target.value })} /></Field>
-          </div>
-          <div className="mt-5 flex gap-3">
-            <BtnPrimary onClick={handleSave} disabled={saving}>{saving ? "Đang lưu..." : "💾 Lưu"}</BtnPrimary>
-            <BtnSecondary onClick={() => setShowForm(false)}>Hủy</BtnSecondary>
-          </div>
-        </AdminCard>
-      )}
+      <Modal open={showForm} onClose={() => setShowForm(false)} title={editId ? "✏️ Sửa danh mục" : "➕ Thêm danh mục"}>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Field label="Slug"><Input placeholder="vd: booster-packs" value={form.slug} onChange={(e) => set({ slug: e.target.value })} /></Field>
+          <Field label="Thứ tự sắp xếp"><Input type="number" value={form.sortOrder} onChange={(e) => set({ sortOrder: Number(e.target.value) })} /></Field>
+          <Field label="Tên (日本語)"><Input value={form.nameJa} onChange={(e) => set({ nameJa: e.target.value })} /></Field>
+          <Field label="Tên (Tiếng Việt)"><Input value={form.nameVi} onChange={(e) => set({ nameVi: e.target.value })} /></Field>
+          <Field label="Icon URL"><Input placeholder="https://..." value={form.iconUrl} onChange={(e) => set({ iconUrl: e.target.value })} /></Field>
+        </div>
+        <div className="mt-5 flex gap-3 border-t border-white/[0.06] pt-5">
+          <BtnPrimary onClick={handleSave} disabled={saving}>{saving ? "Đang lưu..." : "💾 Lưu"}</BtnPrimary>
+          <BtnSecondary onClick={() => setShowForm(false)}>Hủy</BtnSecondary>
+        </div>
+      </Modal>
 
       <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-2">
         {items.length === 0 ? <p className="py-12 text-center text-sm text-slate-500">Chưa có danh mục nào</p> : items.map((cat) => renderCategory(cat))}
