@@ -10,13 +10,6 @@ type Registration = {
   user: { id: string; email: string; name: string | null };
 };
 
-type EventDetail = {
-  id: string;
-  title: string;
-  status: string;
-  winningNumber: number | null;
-  maxParticipants: number;
-};
 
 export default function AdminEventDetailPage({ params }: { params: { id: string } }): ReactElement {
   const [registrations, setRegistrations] = useState<Registration[]>([]);
