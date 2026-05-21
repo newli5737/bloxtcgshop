@@ -54,7 +54,7 @@ export default function AdminProductsPage(): ReactElement {
   const handleSave = async () => {
     const payload: CreateProductPayload = {
       slug: form.slug, sku: form.sku, price: form.price, stock: form.stock,
-      salePrice: form.salePrice ? Number(form.salePrice) : null,
+      salePrice: form.salePrice ? Number(form.salePrice) : undefined,
       categoryId: form.categoryId || undefined, isFeatured: form.isFeatured, isNewArrival: form.isNewArrival,
       imageUrl: imagePreview || undefined,
       translations: [
