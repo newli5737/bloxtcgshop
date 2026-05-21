@@ -59,9 +59,9 @@ export class EventsController {
   @Post(":id/draw")
   draw(
     @Param("id") id: string,
-    @Body() body: { winningNumbers: number[]; emailLang?: "ja" | "en" },
+    @Body() body: { winnerCount: number; emailLang?: "ja" | "en" },
   ): Promise<DrawResult> {
-    return this.events.draw(id, body.winningNumbers, body.emailLang ?? "ja");
+    return this.events.draw(id, body.winnerCount ?? 1, body.emailLang ?? "ja");
   }
 
   @ApiBearerAuth()

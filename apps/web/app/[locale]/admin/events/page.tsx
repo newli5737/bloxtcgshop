@@ -29,8 +29,14 @@ interface Registration {
   user: { id: string; email: string; name: string | null };
 }
 
+type DrawResultData = {
+  winningNumbers: number[];
+  winners: Array<{ luckyNumber: number; email: string; name: string | null }>;
+  emailsSent: number;
+};
+
 const statusLabels: Record<string, string> = {
-  UPCOMING: "⏳ Sắp diễn ra", OPEN: "✅ Đang mở", CLOSED: "🔒 Đã đóng", DRAWN: "🎲 Đã quay", CANCELLED: "❌ Đã hủy",
+  UPCOMING: "Sắp diễn ra", OPEN: "Đang mở", CLOSED: "Đã đóng", DRAWN: "Đã quay", CANCELLED: "Đã hủy",
 };
 const statusColors: Record<string, string> = {
   UPCOMING: "bg-amber-500/10 text-amber-400", OPEN: "bg-emerald-500/10 text-emerald-400",
@@ -39,6 +45,42 @@ const statusColors: Record<string, string> = {
 
 const initForm = { slug: "", title: "", description: "", prizeDescription: "", maxParticipants: 100, drawDate: "" };
 type FormState = typeof initForm;
+
+/* ── Confirm Modal ── */
+function ConfirmModal({ open, title, message, onConfirm, onCancel, variant = "default" }: {
+  open: boolean; title: string; message: string;
+  onConfirm: () => void; onCancel: () => void;
+  variant?: "default" | "danger";
+}): ReactElement | null {
+  if (!open) return null;
+  return (
+    <Modal open={open} onClose={onCancel} title={title}>
+      <p className="text-sm text-slate-300 leading-relaxed whitespace-pre-line">{message}</p>
+      <div className="mt-5 flex gap-3 border-t border-white/[0.06] pt-5">
+        <button onClick={onConfirm}
+          className={`rounded-xl px-5 py-2.5 text-sm font-bold transition ${variant === "danger" ? "bg-red-600 text-white hover:bg-red-500" : "bg-gradient-to-r from-cyan-600 to-cyan-500 text-white shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/40"}`}>
+          Xác nhận
+        </button>
+        <BtnSecondary onClick={onCancel}>Hủy</BtnSecondary>
+      </div>
+    </Modal>
+  );
+}
+
+/* ── Result Modal ── */
+function ResultModal({ open, title, children, onClose }: {
+  open: boolean; title: string; children: React.ReactNode; onClose: () => void;
+}): ReactElement | null {
+  if (!open) return null;
+  return (
+    <Modal open={open} onClose={onClose} title={title} wide>
+      {children}
+      <div className="mt-5 border-t border-white/[0.06] pt-5">
+        <BtnPrimary onClick={onClose}>Đóng</BtnPrimary>
+      </div>
+    </Modal>
+  );
+}
 
 export default function AdminEventsPage(): ReactElement {
   const [events, setEvents] = useState<EventItem[]>([]);
@@ -60,9 +102,20 @@ export default function AdminEventsPage(): ReactElement {
   // Draw modal
   const [showDraw, setShowDraw] = useState(false);
   const [drawEventId, setDrawEventId] = useState<string | null>(null);
-  const [drawNumbers, setDrawNumbers] = useState("");
+  const [drawCount, setDrawCount] = useState(1);
   const [emailLang, setEmailLang] = useState<"ja" | "en">("ja");
   const [drawing, setDrawing] = useState(false);
+
+  // Confirm modal
+  const [confirmState, setConfirmState] = useState<{ open: boolean; title: string; message: string; variant?: "default" | "danger"; onConfirm: () => void }>({ open: false, title: "", message: "", onConfirm: () => {} });
+
+  // Result modal
+  const [drawResult, setDrawResult] = useState<DrawResultData | null>(null);
+
+  const showConfirm = (title: string, message: string, onConfirm: () => void, variant?: "default" | "danger") => {
+    setConfirmState({ open: true, title, message, variant, onConfirm });
+  };
+  const closeConfirm = () => setConfirmState((s) => ({ ...s, open: false }));
 
   const reload = () => {
     setLoading(true);
@@ -103,10 +156,14 @@ export default function AdminEventsPage(): ReactElement {
     finally { setSaving(false); }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Xóa sự kiện này?")) return;
-    await apiMutate(`events/${id}`, "DELETE");
-    reload();
+  const handleDelete = (id: string) => {
+    showConfirm("Xóa sự kiện", "Bạn có chắc chắn muốn xóa sự kiện này?\nHành động không thể hoàn tác.", async () => {
+      closeConfirm();
+      try {
+        await apiMutate(`events/${id}`, "DELETE");
+        reload();
+      } catch (e) { setError((e as Error).message); }
+    }, "danger");
   };
 
   const handleStatusChange = async (id: string, status: string) => {
@@ -125,23 +182,28 @@ export default function AdminEventsPage(): ReactElement {
   };
 
   const openDraw = (ev: EventItem) => {
-    setDrawEventId(ev.id); setDrawNumbers(""); setEmailLang("ja"); setShowDraw(true);
+    setDrawEventId(ev.id); setDrawCount(1); setEmailLang("ja"); setShowDraw(true);
   };
 
-  const handleDraw = async () => {
-    if (!drawEventId) return;
-    const numbers = drawNumbers.split(/[,\s]+/).map(Number).filter((n) => n > 0);
-    if (numbers.length === 0) { alert("Nhập ít nhất 1 số trúng!"); return; }
-    if (!confirm(`Xác nhận quay số: ${numbers.join(", ")}. Gửi email bằng ${emailLang === "ja" ? "tiếng Nhật" : "tiếng Anh"}?`)) return;
-    setDrawing(true);
-    try {
-      const result = await apiMutate<{ winningNumbers: number[]; winners: Array<{ luckyNumber: number; email: string; name: string | null }>; emailsSent: number }>(
-        `events/${drawEventId}/draw`, "POST", { winningNumbers: numbers, emailLang }
-      );
-      alert(`🎉 Đã quay số thành công!\n\nSố trúng: ${result.winningNumbers.join(", ")}\nSố email đã gửi: ${result.emailsSent}\n\nNgười thắng:\n${result.winners.map((w) => `#${w.luckyNumber} — ${w.email} (${w.name ?? "N/A"})`).join("\n")}`);
-      setShowDraw(false); reload();
-    } catch (e) { alert((e as Error).message); }
-    finally { setDrawing(false); }
+  const handleDraw = () => {
+    if (!drawEventId || drawCount < 1) return;
+    showConfirm(
+      "Xác nhận quay số",
+      `Hệ thống sẽ random ${drawCount} người thắng từ danh sách đã đăng ký.\nEmail thông báo sẽ gửi bằng ${emailLang === "ja" ? "tiếng Nhật" : "tiếng Anh"}.\n\nBạn có chắc chắn?`,
+      async () => {
+        closeConfirm();
+        setDrawing(true);
+        try {
+          const result = await apiMutate<DrawResultData>(
+            `events/${drawEventId}/draw`, "POST", { winnerCount: drawCount, emailLang }
+          );
+          setDrawResult(result);
+          setShowDraw(false);
+          reload();
+        } catch (e) { setError((e as Error).message); }
+        finally { setDrawing(false); }
+      }
+    );
   };
 
   if (loading) return <LoadingState />;
@@ -150,12 +212,54 @@ export default function AdminEventsPage(): ReactElement {
     <div>
       {error && <ErrorBanner message={error} onDismiss={() => setError(null)} />}
 
-      <AdminPageHeader title="🎉 Quản lý Sự kiện" count={events.length}>
+      <AdminPageHeader title="Quản lý Sự kiện" count={events.length}>
         <BtnPrimary onClick={openCreate}>+ Thêm sự kiện</BtnPrimary>
       </AdminPageHeader>
 
+      {/* Confirm Modal */}
+      <ConfirmModal
+        open={confirmState.open}
+        title={confirmState.title}
+        message={confirmState.message}
+        variant={confirmState.variant}
+        onConfirm={confirmState.onConfirm}
+        onCancel={closeConfirm}
+      />
+
+      {/* Draw Result Modal */}
+      <ResultModal open={!!drawResult} title="Kết quả quay số" onClose={() => setDrawResult(null)}>
+        {drawResult && (
+          <div className="space-y-4">
+            <div className="rounded-xl border border-emerald-400/20 bg-emerald-500/5 p-4 text-center">
+              <p className="text-sm font-semibold text-emerald-300">Quay số thành công!</p>
+              <p className="mt-1 text-xs text-slate-400">Đã gửi {drawResult.emailsSent} email thông báo</p>
+            </div>
+            <div className="rounded-xl border border-white/[0.06] overflow-hidden">
+              <table className="w-full text-left text-sm">
+                <thead className="bg-[#0f1117]">
+                  <tr className="border-b border-white/[0.06]">
+                    <th className="px-4 py-2.5 text-slate-400 font-medium">Số trúng</th>
+                    <th className="px-4 py-2.5 text-slate-400 font-medium">Email</th>
+                    <th className="px-4 py-2.5 text-slate-400 font-medium">Tên</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/[0.04]">
+                  {drawResult.winners.map((w) => (
+                    <tr key={w.luckyNumber} className="bg-amber-500/5">
+                      <td className="px-4 py-2.5 font-mono font-bold text-amber-400">#{w.luckyNumber}</td>
+                      <td className="px-4 py-2.5 text-white">{w.email}</td>
+                      <td className="px-4 py-2.5 text-slate-300">{w.name ?? "—"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </ResultModal>
+
       {/* Detail Modal */}
-      <Modal open={!!detailEvent} onClose={() => setDetailEvent(null)} title="📋 Chi tiết sự kiện" wide>
+      <Modal open={!!detailEvent} onClose={() => setDetailEvent(null)} title="Chi tiết sự kiện" wide>
         {detailEvent && (
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-3 text-sm">
@@ -183,7 +287,7 @@ export default function AdminEventsPage(): ReactElement {
                         <td className="px-3 py-2 font-mono font-bold text-amber-400">#{r.luckyNumber}</td>
                         <td className="px-3 py-2 text-white">{r.user.email}</td>
                         <td className="px-3 py-2 text-slate-300">{r.user.name ?? "—"}</td>
-                        <td className="px-3 py-2">{r.isWinner ? <span className="text-emerald-400 font-bold">🏆 Thắng</span> : <span className="text-slate-500">—</span>}</td>
+                        <td className="px-3 py-2">{r.isWinner ? <span className="text-emerald-400 font-bold">Thắng</span> : <span className="text-slate-500">—</span>}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -195,7 +299,7 @@ export default function AdminEventsPage(): ReactElement {
       </Modal>
 
       {/* Form Modal */}
-      <Modal open={showForm} onClose={() => setShowForm(false)} title={editId ? "✏️ Sửa sự kiện" : "➕ Thêm sự kiện"} wide>
+      <Modal open={showForm} onClose={() => setShowForm(false)} title={editId ? "Sửa sự kiện" : "Thêm sự kiện"} wide>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Field label="Slug"><Input placeholder="vd: pokemon-giveaway-jan" value={form.slug} onChange={(e) => set({ slug: e.target.value })} /></Field>
           <Field label="Tên sự kiện"><Input value={form.title} onChange={(e) => set({ title: e.target.value })} /></Field>
@@ -205,32 +309,30 @@ export default function AdminEventsPage(): ReactElement {
           <div className="md:col-span-2"><Field label="Mô tả giải thưởng"><TextArea rows={3} value={form.prizeDescription} onChange={(e) => set({ prizeDescription: e.target.value })} /></Field></div>
         </div>
         <div className="mt-5 flex gap-3 border-t border-white/[0.06] pt-5">
-          <BtnPrimary onClick={handleSave} disabled={saving}>{saving ? "Đang lưu..." : "💾 Lưu"}</BtnPrimary>
+          <BtnPrimary onClick={handleSave} disabled={saving}>{saving ? "Đang lưu..." : "Lưu"}</BtnPrimary>
           <BtnSecondary onClick={() => setShowForm(false)}>Hủy</BtnSecondary>
         </div>
       </Modal>
 
       {/* Draw Modal */}
-      <Modal open={showDraw} onClose={() => setShowDraw(false)} title="🎲 Quay số trúng thưởng">
+      <Modal open={showDraw} onClose={() => setShowDraw(false)} title="Quay số trúng thưởng">
         <div className="space-y-4">
-          <Field label="Nhập các số trúng (cách nhau bằng dấu phẩy)">
-            <Input placeholder="vd: 7, 13, 42" value={drawNumbers} onChange={(e) => setDrawNumbers(e.target.value)} />
+          <Field label="Số lượng người thắng">
+            <Input type="number" min={1} placeholder="vd: 2" value={drawCount} onChange={(e) => setDrawCount(Math.max(1, Number(e.target.value)))} />
           </Field>
           <Field label="Ngôn ngữ email thông báo">
             <Select value={emailLang} onChange={(e) => setEmailLang(e.target.value as "ja" | "en")}>
-              <option value="ja">🇯🇵 Tiếng Nhật</option>
-              <option value="en">🇬🇧 Tiếng Anh</option>
+              <option value="ja">Tiếng Nhật (JA)</option>
+              <option value="en">Tiếng Anh (EN)</option>
             </Select>
           </Field>
           <div className="rounded-xl bg-amber-500/5 border border-amber-500/20 p-4 text-sm text-amber-300">
-            ⚠️ Sau khi xác nhận, hệ thống sẽ:<br />
-            1. Đánh dấu người thắng<br />
-            2. Gửi email xác nhận cho từng người thắng<br />
-            3. Đổi trạng thái sự kiện sang &quot;Đã quay&quot;
+            Hệ thống sẽ tự động random {drawCount} số từ danh sách đã đăng ký.<br />
+            Đảm bảo 100% có người trúng thưởng.
           </div>
         </div>
         <div className="mt-5 flex gap-3 border-t border-white/[0.06] pt-5">
-          <BtnPrimary onClick={handleDraw} disabled={drawing}>{drawing ? "Đang quay..." : "🎲 Xác nhận quay số"}</BtnPrimary>
+          <BtnPrimary onClick={handleDraw} disabled={drawing}>{drawing ? "Đang quay..." : "Xác nhận quay số"}</BtnPrimary>
           <BtnSecondary onClick={() => setShowDraw(false)}>Hủy</BtnSecondary>
         </div>
       </Modal>
@@ -253,7 +355,7 @@ export default function AdminEventsPage(): ReactElement {
                 <BtnAction variant="edit" onClick={() => openEdit(ev)}>Sửa</BtnAction>
                 {(ev.status === "UPCOMING") && <BtnAction variant="view" onClick={() => handleStatusChange(ev.id, "OPEN")}>Mở</BtnAction>}
                 {(ev.status === "OPEN") && <BtnAction variant="view" onClick={() => handleStatusChange(ev.id, "CLOSED")}>Đóng</BtnAction>}
-                {(ev.status === "OPEN" || ev.status === "CLOSED") && <BtnAction variant="view" onClick={() => openDraw(ev)}>🎲 Quay</BtnAction>}
+                {(ev.status === "OPEN" || ev.status === "CLOSED") && <BtnAction variant="view" onClick={() => openDraw(ev)}>Quay</BtnAction>}
                 <BtnAction variant="delete" onClick={() => handleDelete(ev.id)}>Xóa</BtnAction>
               </div>
             </td>

@@ -137,7 +137,7 @@ export class EventsService {
     return result as EventRegistrationResponse[];
   }
 
-  async draw(eventId: string, winningNumbers: number[], emailLang: "ja" | "en" = "ja"): Promise<DrawResult> {
+  async draw(eventId: string, winnerCount: number, emailLang: "ja" | "en" = "ja"): Promise<DrawResult> {
     const event = await this.prisma.event.findUnique({
       where: { id: eventId },
       include: { registrations: { include: { user: { select: { email: true, name: true } } } } },
@@ -146,12 +146,17 @@ export class EventsService {
     if (event.registrations.length === 0) {
       throw new BadRequestException("No registrations yet");
     }
-
-    // Find matching registrations
-    const winnerRegs = event.registrations.filter((r) => winningNumbers.includes(r.luckyNumber));
-    if (winnerRegs.length === 0) {
-      throw new BadRequestException("None of the provided numbers match any registration");
+    if (winnerCount < 1) {
+      throw new BadRequestException("Winner count must be at least 1");
     }
+    if (winnerCount > event.registrations.length) {
+      throw new BadRequestException(`Only ${event.registrations.length} registrations, cannot pick ${winnerCount} winners`);
+    }
+
+    // Shuffle and pick random winners from existing registrations
+    const shuffled = [...event.registrations].sort(() => Math.random() - 0.5);
+    const winnerRegs = shuffled.slice(0, winnerCount);
+    const winningNumbers = winnerRegs.map((r) => r.luckyNumber);
 
     // Mark winners + update event status
     await this.prisma.$transaction([
@@ -173,14 +178,16 @@ export class EventsService {
     for (const reg of winnerRegs) {
       const user = reg.user as { email: string; name: string | null };
       winners.push({ luckyNumber: reg.luckyNumber, email: user.email, name: user.name });
-      await this.mail.sendWinnerNotification(
-        user.email,
-        event.title,
-        reg.luckyNumber,
-        event.prizeDescription,
-        emailLang,
-      );
-      emailsSent++;
+      try {
+        await this.mail.sendWinnerNotification(
+          user.email,
+          event.title,
+          reg.luckyNumber,
+          event.prizeDescription,
+          emailLang,
+        );
+        emailsSent++;
+      } catch { /* email send failure should not block draw */ }
     }
 
     this.eventEmitter.emit("event.drawn", {
