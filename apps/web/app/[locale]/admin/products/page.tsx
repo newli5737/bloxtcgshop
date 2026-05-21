@@ -18,7 +18,7 @@ const productActions = {
   remove: (id: string) => adminProducts.remove(id),
 };
 
-const initForm = { slug: "", sku: "", price: 0, salePrice: "", stock: 0, nameJa: "", nameVi: "", descJa: "", descVi: "", categoryId: "", isFeatured: false, isNewArrival: false };
+const initForm = { slug: "", sku: "", price: 0, salePrice: "", stock: 0, nameJa: "", nameEn: "", nameVi: "", descJa: "", descEn: "", descVi: "", categoryId: "", isFeatured: false, isNewArrival: false };
 type FormState = typeof initForm;
 
 const PAGE_SIZE = 15;
@@ -64,7 +64,7 @@ export default function AdminProductsPage(): ReactElement {
   const openCreate = () => { setEditId(null); setForm(initForm); setImagePreview(null); setDetail(null); setShowForm(true); };
   const openEdit = (p: AdminProduct) => {
     setEditId(p.id);
-    setForm({ slug: p.slug, sku: p.sku, price: p.price, salePrice: p.salePrice?.toString() ?? "", stock: p.stock, nameJa: p.name, nameVi: "", descJa: "", descVi: "", categoryId: "", isFeatured: p.isFeatured, isNewArrival: p.isNewArrival });
+    setForm({ slug: p.slug, sku: p.sku, price: p.price, salePrice: p.salePrice?.toString() ?? "", stock: p.stock, nameJa: p.name, nameEn: "", nameVi: "", descJa: "", descEn: "", descVi: "", categoryId: "", isFeatured: p.isFeatured, isNewArrival: p.isNewArrival });
     setImagePreview(p.imageUrl); setDetail(null); setShowForm(true);
   };
 
@@ -83,6 +83,7 @@ export default function AdminProductsPage(): ReactElement {
       imageUrl: imagePreview || undefined,
       translations: [
         { locale: "ja", name: form.nameJa, description: form.descJa },
+        { locale: "en", name: form.nameEn || form.nameJa, description: form.descEn || form.descJa },
         { locale: "vi", name: form.nameVi || form.nameJa, description: form.descVi || form.descJa },
       ],
     };
@@ -170,9 +171,13 @@ export default function AdminProductsPage(): ReactElement {
               {categories.map((c) => <option key={c.id} value={c.id}>{c.translations[0]?.name ?? c.slug}</option>)}
             </Select>
           </Field>
-          <Field label="Tên (日本語)"><Input value={form.nameJa} onChange={(e) => set({ nameJa: e.target.value })} /></Field>
-          <Field label="Tên (Tiếng Việt)"><Input value={form.nameVi} onChange={(e) => set({ nameVi: e.target.value })} /></Field>
+          <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Field label="Tên (日本語)"><Input value={form.nameJa} onChange={(e) => set({ nameJa: e.target.value })} /></Field>
+            <Field label="Tên (English)"><Input value={form.nameEn} onChange={(e) => set({ nameEn: e.target.value })} /></Field>
+            <Field label="Tên (Tiếng Việt)"><Input value={form.nameVi} onChange={(e) => set({ nameVi: e.target.value })} /></Field>
+          </div>
           <div className="md:col-span-2"><Field label="Mô tả (日本語)"><TextArea rows={3} value={form.descJa} onChange={(e) => set({ descJa: e.target.value })} /></Field></div>
+          <div className="md:col-span-2"><Field label="Mô tả (English)"><TextArea rows={3} value={form.descEn} onChange={(e) => set({ descEn: e.target.value })} /></Field></div>
           <div className="md:col-span-2"><Field label="Mô tả (Tiếng Việt)"><TextArea rows={3} value={form.descVi} onChange={(e) => set({ descVi: e.target.value })} /></Field></div>
           <div className="md:col-span-2">
             <FileInput label="Ảnh sản phẩm" onChange={handleUpload} preview={imagePreview} />
