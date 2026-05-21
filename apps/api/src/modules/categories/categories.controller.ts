@@ -12,7 +12,7 @@ export class CategoriesController {
   @Public()
   @Get()
   tree(@Query("locale") locale?: string): Promise<unknown[]> {
-    return this.categories.tree(locale ?? "en");
+    return this.categories.tree(locale ?? "ja");
   }
 
   @Public()
@@ -24,6 +24,6 @@ export class CategoriesController {
   @Public()
   @Get(":slug")
   bySlug(@Param("slug") slug: string, @Query("locale") locale?: string): Promise<unknown> {
-    return this.categories.bySlug(slug, locale ?? "en");
+    return this.categories.bySlug(slug, locale ?? "ja");
   }
 }

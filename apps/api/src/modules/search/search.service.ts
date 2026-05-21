@@ -10,11 +10,11 @@ export class SearchService {
     private readonly products: ProductsService,
   ) {}
 
-  async search(q: string, locale = "en", query: FilterProductsDto): Promise<unknown> {
+  async search(q: string, locale = "ja", query: FilterProductsDto): Promise<unknown> {
     return this.products.list({ ...query, q, locale });
   }
 
-  async suggestions(q: string, locale = "en"): Promise<unknown[]> {
+  async suggestions(q: string, locale = "ja"): Promise<unknown[]> {
     const term = q.trim();
     if (term.length < 2) {
       return [];

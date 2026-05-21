@@ -61,6 +61,11 @@ export function Footer(): React.ReactElement {
                 </Link>
               </li>
               <li>
+                <Link href="/events" className="text-slate-400 transition hover:text-cyan-300">
+                  {t("events")}
+                </Link>
+              </li>
+              <li>
                 <span className="cursor-default text-slate-600">{t("terms")}</span>
               </li>
               <li>

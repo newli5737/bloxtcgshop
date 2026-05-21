@@ -1,17 +1,20 @@
-import { Body, Controller, Post } from "@nestjs/common";
+import { Body, Controller, Post, Req, Res } from "@nestjs/common";
 import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
+import { Response, Request } from "express";
+import { ConfigService } from "@nestjs/config";
 import { CurrentUser, type AuthUser } from "../../common/decorators/current-user.decorator";
 import { Public } from "../../common/decorators/public.decorator";
-import { AuthService } from "./auth.service";
+import { AuthService, type TokenPair } from "./auth.service";
 import { LoginDto } from "./dto/login.dto";
-import { LogoutDto } from "./dto/logout.dto";
-import { RefreshDto } from "./dto/refresh.dto";
 import { RegisterDto } from "./dto/register.dto";
 
 @ApiTags("auth")
 @Controller("auth")
 export class AuthController {
-  constructor(private readonly auth: AuthService) {}
+  constructor(
+    private readonly auth: AuthService,
+    private readonly config: ConfigService,
+  ) {}
 
   @Public()
   @Post("register")
@@ -21,25 +24,47 @@ export class AuthController {
 
   @Public()
   @Post("login")
-  login(@Body() dto: LoginDto): Promise<unknown> {
-    return this.auth.login(dto);
+  async login(
+    @Body() dto: LoginDto,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<unknown> {
+    const { tokens, user } = await this.auth.login(dto);
+    this.setTokenCookies(res, tokens);
+    return { user };
   }
 
   @Public()
   @Post("refresh")
-  refresh(@Body() dto: RefreshDto): Promise<unknown> {
-    return this.auth.refresh(dto.refreshToken);
+  async refresh(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<unknown> {
+    const refreshToken = (req as Request & { cookies?: Record<string, string> }).cookies?.refresh_token;
+    if (!refreshToken) {
+      res.status(401);
+      return { data: null, meta: null, error: { code: "HTTP_401", message: "No refresh token" } };
+    }
+    const { tokens } = await this.auth.refresh(refreshToken);
+    this.setTokenCookies(res, tokens);
+    return { ok: true };
   }
 
   @ApiBearerAuth()
   @Post("logout")
-  logout(@CurrentUser() user: AuthUser, @Body() dto: LogoutDto): Promise<unknown> {
-    return this.auth.logout(user.userId, dto.refreshToken);
+  async logout(
+    @CurrentUser() user: AuthUser,
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<unknown> {
+    const refreshToken = (req as Request & { cookies?: Record<string, string> }).cookies?.refresh_token;
+    await this.auth.logout(user.userId, refreshToken);
+    this.clearTokenCookies(res);
+    return { ok: true };
   }
 
   @Public()
   @Post("forgot-password")
-  forgotPassword(@Body() body: { email: string }): { data: { ok: true }; meta: null; error: null } {
+  forgotPassword(@Body() _body: { email: string }): { data: { ok: true }; meta: null; error: null } {
     return { data: { ok: true }, meta: null, error: null };
   }
 
@@ -47,5 +72,35 @@ export class AuthController {
   @Post("reset-password")
   resetPassword(@Body() _body: { token: string; password: string }): { data: { ok: true }; meta: null; error: null } {
     return { data: { ok: true }, meta: null, error: null };
+  }
+
+  private setTokenCookies(res: Response, tokens: TokenPair): void {
+    const isProduction = this.config.get<string>("NODE_ENV") === "production";
+    const domain = this.config.get<string>("COOKIE_DOMAIN") || undefined;
+
+    res.cookie("access_token", tokens.accessToken, {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: "lax",
+      path: "/",
+      maxAge: tokens.accessMaxAge,
+      domain,
+    });
+    res.cookie("refresh_token", tokens.refreshToken, {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: "lax",
+      path: "/v1/auth",
+      maxAge: tokens.refreshMaxAge,
+      domain,
+    });
+  }
+
+  private clearTokenCookies(res: Response): void {
+    const isProduction = this.config.get<string>("NODE_ENV") === "production";
+    const domain = this.config.get<string>("COOKIE_DOMAIN") || undefined;
+
+    res.clearCookie("access_token", { httpOnly: true, secure: isProduction, sameSite: "lax", path: "/", domain });
+    res.clearCookie("refresh_token", { httpOnly: true, secure: isProduction, sameSite: "lax", path: "/v1/auth", domain });
   }
 }

@@ -10,6 +10,13 @@ import type { RegisterDto } from "./dto/register.dto";
 
 const REFRESH_MS = 7 * 24 * 60 * 60 * 1000;
 
+export type TokenPair = {
+  accessToken: string;
+  refreshToken: string;
+  accessMaxAge: number;
+  refreshMaxAge: number;
+};
+
 @Injectable()
 export class AuthService {
   constructor(
@@ -36,9 +43,7 @@ export class AuthService {
   }
 
   async login(dto: LoginDto): Promise<{
-    accessToken: string;
-    refreshToken: string;
-    expiresIn: string;
+    tokens: TokenPair;
     user: { id: string; email: string; name: string | null; role: Role; locale: string };
   }> {
     const user = await this.prisma.user.findUnique({ where: { email: dto.email.toLowerCase() } });
@@ -49,21 +54,14 @@ export class AuthService {
     if (!ok) {
       throw new UnauthorizedException("Invalid credentials");
     }
-    const refreshToken = randomBytes(48).toString("hex");
-    const expiresAt = new Date(Date.now() + REFRESH_MS);
-    await this.prisma.session.create({
-      data: { userId: user.id, refreshToken, expiresAt },
-    });
-    const accessToken = await this.signAccess(user);
+    const tokens = await this.createTokenPair(user);
     return {
-      accessToken,
-      refreshToken,
-      expiresIn: this.config.get<string>("JWT_EXPIRES_IN") ?? "15m",
+      tokens,
       user: { id: user.id, email: user.email, name: user.name, role: user.role, locale: user.locale },
     };
   }
 
-  async refresh(refreshToken: string): Promise<{ accessToken: string; expiresIn: string }> {
+  async refresh(refreshToken: string): Promise<{ tokens: TokenPair }> {
     const session = await this.prisma.session.findUnique({ where: { refreshToken } });
     if (!session || session.expiresAt < new Date()) {
       throw new UnauthorizedException("Invalid refresh token");
@@ -72,24 +70,52 @@ export class AuthService {
     if (!user) {
       throw new UnauthorizedException("Invalid refresh token");
     }
-    const accessToken = await this.signAccess(user);
-    return { accessToken, expiresIn: this.config.get<string>("JWT_EXPIRES_IN") ?? "15m" };
+    // Rotate refresh token
+    await this.prisma.session.delete({ where: { id: session.id } });
+    const tokens = await this.createTokenPair(user);
+    return { tokens };
   }
 
-  async logout(userId: string, refreshToken: string): Promise<{ ok: true }> {
-    await this.prisma.session.deleteMany({
-      where: { userId, refreshToken },
-    });
+  async logout(userId: string, refreshToken?: string): Promise<{ ok: true }> {
+    if (refreshToken) {
+      await this.prisma.session.deleteMany({ where: { userId, refreshToken } });
+    } else {
+      await this.prisma.session.deleteMany({ where: { userId } });
+    }
     return { ok: true };
   }
 
-  private async signAccess(user: { id: string; email: string; role: Role }): Promise<string> {
-    return this.jwt.signAsync(
+  async createTokenPair(user: { id: string; email: string; role: Role }): Promise<TokenPair> {
+    const expiresIn = this.config.get<string>("JWT_EXPIRES_IN") ?? "15m";
+    const accessToken = await this.jwt.signAsync(
       { sub: user.id, email: user.email, role: user.role },
       {
         secret: this.config.getOrThrow<string>("JWT_SECRET"),
-        expiresIn: this.config.get<string>("JWT_EXPIRES_IN") ?? "15m",
+        expiresIn,
       },
     );
+    const refreshToken = randomBytes(48).toString("hex");
+    const expiresAt = new Date(Date.now() + REFRESH_MS);
+    await this.prisma.session.create({
+      data: { userId: user.id, refreshToken, expiresAt },
+    });
+
+    // Parse expiresIn to ms for cookie maxAge
+    const accessMaxAge = this.parseToMs(expiresIn);
+
+    return { accessToken, refreshToken, accessMaxAge, refreshMaxAge: REFRESH_MS };
+  }
+
+  private parseToMs(duration: string): number {
+    const match = duration.match(/^(\d+)(s|m|h|d)$/);
+    if (!match) return 15 * 60 * 1000;
+    const val = Number(match[1]);
+    switch (match[2]) {
+      case "s": return val * 1000;
+      case "m": return val * 60 * 1000;
+      case "h": return val * 3600 * 1000;
+      case "d": return val * 86400 * 1000;
+      default: return 15 * 60 * 1000;
+    }
   }
 }

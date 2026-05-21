@@ -1,1 +1,1 @@
-export { Prisma, PrismaClient, Role, ProductStatus, CardRarity } from "@prisma/client";
+export { Prisma, PrismaClient, Role, ProductStatus, CardRarity, EventStatus } from "@prisma/client";

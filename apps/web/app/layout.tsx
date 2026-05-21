@@ -34,7 +34,7 @@ export default function RootLayout({
 }>): React.ReactElement {
   return (
     <html
-      lang="en"
+      lang="ja"
       suppressHydrationWarning
       className={`${outfit.variable} ${dmSans.variable} ${beVietnamPro.variable} dark`}
     >

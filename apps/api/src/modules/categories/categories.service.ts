@@ -10,12 +10,12 @@ export class CategoriesService {
     private readonly productsService: ProductsService,
   ) {}
 
-  async tree(locale = "en"): Promise<unknown[]> {
+  async tree(locale = "ja"): Promise<unknown[]> {
     const categories = await prismaCategoryTree(this.prisma, locale);
     return categories;
   }
 
-  async bySlug(slug: string, locale = "en"): Promise<unknown> {
+  async bySlug(slug: string, locale = "ja"): Promise<unknown> {
     const cat = await this.prisma.category.findUnique({
       where: { slug },
       include: {

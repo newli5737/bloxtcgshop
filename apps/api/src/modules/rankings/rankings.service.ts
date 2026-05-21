@@ -13,7 +13,7 @@ type RankRow = {
 export class RankingsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async top(type: "sales" | "views" | "wishlist", limit = 10, locale = "en"): Promise<RankRow[]> {
+  async top(type: "sales" | "views" | "wishlist", limit = 10, locale = "ja"): Promise<RankRow[]> {
     const take = Math.min(50, Math.max(1, limit));
     if (type === "wishlist") {
       const grouped = await this.prisma.wishlist.groupBy({

@@ -5,7 +5,7 @@ import { PrismaService } from "../../prisma/prisma.service";
 export class BannersService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async active(locale = "en"): Promise<unknown[]> {
+  async active(locale = "ja"): Promise<unknown[]> {
     const now = new Date();
     return this.prisma.banner.findMany({
       where: {

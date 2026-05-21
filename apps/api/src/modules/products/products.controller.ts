@@ -20,7 +20,7 @@ export class ProductsController {
   @Public()
   @Get(":slug")
   detail(@Param("slug") slug: string, @Query("locale") locale?: string): Promise<unknown> {
-    return this.products.getBySlug(slug, locale ?? "en");
+    return this.products.getBySlug(slug, locale ?? "ja");
   }
 
   @ApiBearerAuth()

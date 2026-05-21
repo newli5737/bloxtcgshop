@@ -1,4 +1,4 @@
-import { PrismaClient, Role, ProductStatus, CardRarity } from "@prisma/client";
+import { PrismaClient, Role, ProductStatus, CardRarity, EventStatus } from "@prisma/client";
 import * as bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
@@ -6,6 +6,8 @@ const prisma = new PrismaClient();
 const locales = ["en", "vi", "ja"] as const;
 
 async function main(): Promise<void> {
+  await prisma.eventRegistration.deleteMany();
+  await prisma.event.deleteMany();
   await prisma.wishlist.deleteMany();
   await prisma.session.deleteMany();
   await prisma.productPokemon.deleteMany();
@@ -29,21 +31,21 @@ async function main(): Promise<void> {
 
   const admin = await prisma.user.create({
     data: {
-      email: "admin@pokemart.local",
+      email: "admin@bloxtcgshop.com",
       name: "Admin",
       passwordHash,
       role: Role.ADMIN,
-      locale: "en",
+      locale: "ja",
     },
   });
 
   const demoUser = await prisma.user.create({
     data: {
-      email: "user@pokemart.local",
+      email: "user@bloxtcgshop.com",
       name: "Ash Trainer",
       passwordHash: userHash,
       role: Role.USER,
-      locale: "vi",
+      locale: "ja",
     },
   });
 
@@ -286,6 +288,40 @@ async function main(): Promise<void> {
       },
     });
   }
+
+  // Events seed
+  const event1 = await prisma.event.create({
+    data: {
+      slug: "summer-lucky-draw-2026",
+      title: "サマーラッキードロー 2026",
+      description: "夏の特別イベント！参加して素敵な賞品をゲットしよう！",
+      prizeDescription: "1等: 限定ポケモンカードセット（3万円相当）",
+      status: EventStatus.OPEN,
+      maxParticipants: 50,
+      drawDate: new Date(Date.now() + 86400000 * 14),
+    },
+  });
+
+  await prisma.event.create({
+    data: {
+      slug: "grand-opening-event",
+      title: "グランドオープニングイベント",
+      description: "BloxTCGShopオープン記念イベント！",
+      prizeDescription: "1等: ブースターボックス 5箱セット",
+      status: EventStatus.UPCOMING,
+      maxParticipants: 100,
+      drawDate: new Date(Date.now() + 86400000 * 30),
+    },
+  });
+
+  // Register demo user for the open event
+  await prisma.eventRegistration.create({
+    data: {
+      eventId: event1.id,
+      userId: demoUser.id,
+      luckyNumber: 7,
+    },
+  });
 
   console.log("Seed OK. Admin:", admin.email, "password: admin123");
   console.log("Demo user:", demoUser.email, "password: user123");

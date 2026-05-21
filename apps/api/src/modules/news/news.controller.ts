@@ -15,12 +15,12 @@ export class NewsController {
     @Query("page") page?: string,
     @Query("limit") limit?: string,
   ): Promise<unknown> {
-    return this.news.list(locale ?? "en", Number(page ?? 1) || 1, Number(limit ?? 10) || 10);
+    return this.news.list(locale ?? "ja", Number(page ?? 1) || 1, Number(limit ?? 10) || 10);
   }
 
   @Public()
   @Get(":slug")
   bySlug(@Param("slug") slug: string, @Query("locale") locale?: string): Promise<unknown> {
-    return this.news.bySlug(slug, locale ?? "en");
+    return this.news.bySlug(slug, locale ?? "ja");
   }
 }

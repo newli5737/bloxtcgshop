@@ -12,12 +12,12 @@ export class SearchController {
   @Public()
   @Get()
   fullSearch(@Query() query: FilterProductsDto): Promise<unknown> {
-    return this.searchService.search(query.q ?? "", query.locale ?? "en", query);
+    return this.searchService.search(query.q ?? "", query.locale ?? "ja", query);
   }
 
   @Public()
   @Get("suggestions")
   suggestions(@Query("q") q: string, @Query("locale") locale?: string): Promise<unknown[]> {
-    return this.searchService.suggestions(q ?? "", locale ?? "en");
+    return this.searchService.suggestions(q ?? "", locale ?? "ja");
   }
 }

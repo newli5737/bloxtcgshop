@@ -11,6 +11,6 @@ export class BannersController {
   @Public()
   @Get()
   list(@Query("locale") locale?: string): Promise<unknown[]> {
-    return this.banners.active(locale ?? "en");
+    return this.banners.active(locale ?? "ja");
   }
 }

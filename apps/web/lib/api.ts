@@ -24,7 +24,11 @@ export async function apiFetch<T>(
   }
   const { params, ...init } = options ?? {};
   void params;
-  const res = await fetch(url.toString(), { ...init, next: { revalidate: 60 } });
+  const res = await fetch(url.toString(), {
+    ...init,
+    credentials: "include",
+    next: { revalidate: 60 },
+  });
   const json = (await res.json()) as ApiEnvelope<T>;
   if (!res.ok || json.error) {
     throw new Error(json.error?.message ?? `Request failed: ${res.status}`);

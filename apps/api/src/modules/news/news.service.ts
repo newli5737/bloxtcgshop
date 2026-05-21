@@ -5,7 +5,7 @@ import { PrismaService } from "../../prisma/prisma.service";
 export class NewsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async list(locale = "en", page = 1, limit = 10): Promise<{ data: unknown[]; meta: Record<string, number> }> {
+  async list(locale = "ja", page = 1, limit = 10): Promise<{ data: unknown[]; meta: Record<string, number> }> {
     const skip = (page - 1) * limit;
     const where = { isPublished: true };
     const [total, rows] = await Promise.all([
@@ -24,7 +24,7 @@ export class NewsService {
     };
   }
 
-  async bySlug(slug: string, locale = "en"): Promise<unknown> {
+  async bySlug(slug: string, locale = "ja"): Promise<unknown> {
     const item = await this.prisma.news.findFirst({
       where: { slug, isPublished: true },
       include: { translations: { where: { locale } } },

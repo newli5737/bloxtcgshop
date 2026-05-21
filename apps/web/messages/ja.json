@@ -8,8 +8,10 @@
     "pokemon": "ポケモン",
     "rankings": "ランキング",
     "news": "ニュース",
+    "events": "イベント",
     "search": "検索",
     "login": "ログイン",
+    "logout": "ログアウト",
     "language": "言語",
     "footerTagline": "プレミアムTCGマーケットプレイス。",
     "terms": "利用規約",
@@ -44,5 +46,23 @@
     "lowStock": "残りわずか",
     "outOfStock": "在庫切れ",
     "preOrder": "予約"
+  },
+  "events": {
+    "title": "イベント",
+    "register": "参加する",
+    "yourNumber": "あなたの番号",
+    "winner": "当選者",
+    "drawDate": "抽選日",
+    "participants": "参加者数",
+    "registered": "登録済み",
+    "closed": "終了",
+    "drawn": "抽選済み",
+    "upcoming": "近日開催",
+    "open": "受付中",
+    "maxReached": "定員に達しました",
+    "prize": "賞品",
+    "winningNumber": "当選番号",
+    "loginRequired": "参加にはログインが必要です",
+    "backToEvents": "イベント一覧へ"
   }
 }

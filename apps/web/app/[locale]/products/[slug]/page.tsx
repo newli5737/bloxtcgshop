@@ -29,8 +29,8 @@ type Props = { params: { locale: string; slug: string } };
 function formatMoney(value: number, locale: string): string {
   return new Intl.NumberFormat(locale === "vi" ? "vi-VN" : locale === "ja" ? "ja-JP" : "en-US", {
     style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 2,
+    currency: "JPY",
+    maximumFractionDigits: 0,
   }).format(value);
 }
 

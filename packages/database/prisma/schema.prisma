@@ -40,8 +40,9 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  wishlistItems Wishlist[]
-  sessions      Session[]
+  wishlistItems      Wishlist[]
+  sessions           Session[]
+  eventRegistrations EventRegistration[]
 
   @@map("users")
 }
@@ -268,4 +269,48 @@ model Wishlist {
 
   @@id([userId, productId])
   @@map("wishlist")
+}
+
+enum EventStatus {
+  UPCOMING
+  OPEN
+  CLOSED
+  DRAWN
+  CANCELLED
+}
+
+model Event {
+  id               String      @id @default(cuid())
+  slug             String      @unique
+  title            String
+  description      String?     @db.Text
+  prizeDescription String?     @db.Text
+  imageUrl         String?
+  status           EventStatus @default(UPCOMING)
+  maxParticipants  Int         @default(100)
+  winningNumber    Int?
+  drawDate         DateTime?
+  drawnAt          DateTime?
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+
+  registrations EventRegistration[]
+
+  @@map("events")
+}
+
+model EventRegistration {
+  id          String   @id @default(cuid())
+  eventId     String
+  userId      String
+  luckyNumber Int
+  isWinner    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, userId])
+  @@unique([eventId, luckyNumber])
+  @@map("event_registrations")
 }

@@ -1,6 +1,8 @@
 import { ConflictException, Injectable, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "../../prisma/prisma.service";
 import type { UpdateProfileDto } from "./dto/update-profile.dto";
+
+@Injectable()
 export class UsersService {
   constructor(private readonly prisma: PrismaService) {}
 
@@ -27,7 +29,7 @@ export class UsersService {
     });
   }
 
-  async wishlist(userId: string, locale = "en"): Promise<unknown[]> {
+  async wishlist(userId: string, locale = "ja"): Promise<unknown[]> {
     const rows = await this.prisma.wishlist.findMany({
       where: { userId },
       include: {

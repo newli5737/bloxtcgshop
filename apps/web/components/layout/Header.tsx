@@ -61,6 +61,9 @@ export function Header(): React.ReactElement {
       <Link href="/news" className={mobile ? `${navClass} text-base` : navClass}>
         {t("news")}
       </Link>
+      <Link href="/events" className={mobile ? `${navClass} text-base` : navClass}>
+        {t("events")}
+      </Link>
     </>
   );
 

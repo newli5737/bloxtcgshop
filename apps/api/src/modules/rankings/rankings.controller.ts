@@ -16,6 +16,6 @@ export class RankingsController {
     @Query("locale") locale?: string,
   ): Promise<unknown[]> {
     const lim = Number(limit ?? 10) || 10;
-    return this.rankings.top(type, lim, locale ?? "en");
+    return this.rankings.top(type, lim, locale ?? "ja");
   }
 }

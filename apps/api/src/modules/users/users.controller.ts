@@ -22,7 +22,7 @@ export class UsersController {
 
   @Get("me/wishlist")
   wishlist(@CurrentUser() user: AuthUser, @Query("locale") locale?: string): Promise<unknown[]> {
-    return this.users.wishlist(user.userId, locale ?? "en");
+    return this.users.wishlist(user.userId, locale ?? "ja");
   }
 
   @Post("me/wishlist/:productId")

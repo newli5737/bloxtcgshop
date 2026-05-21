@@ -17,7 +17,7 @@ export class ProductsService {
   constructor(private readonly prisma: PrismaService) {}
 
   async list(dto: FilterProductsDto): Promise<{ data: unknown[]; meta: Record<string, number> }> {
-    const locale = dto.locale ?? "en";
+    const locale = dto.locale ?? "ja";
     const page = dto.page ?? 1;
     const limit = dto.limit ?? 24;
     const skip = (page - 1) * limit;
@@ -111,7 +111,7 @@ export class ProductsService {
     };
   }
 
-  async getBySlug(slug: string, locale = "en"): Promise<unknown> {
+  async getBySlug(slug: string, locale = "ja"): Promise<unknown> {
     const product = await this.prisma.product.findUnique({
       where: { slug },
       include: productInclude(locale),
