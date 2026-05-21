@@ -2,7 +2,7 @@
 import { useState, useEffect, type ReactElement } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { apiGet, apiMutate } from "../../../../lib/api";
+import { apiGet, apiMutate } from "../../../../../lib/api";
 
 type EventItem = {
   id: string;

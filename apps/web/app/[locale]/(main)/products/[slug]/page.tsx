@@ -1,7 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import type { ReactElement } from "react";
-import { Link } from "../../../../i18n/navigation";
-import { apiFetch } from "../../../../lib/api";
+import { Link } from "../../../../../i18n/navigation";
+import { apiFetch } from "../../../../../lib/api";
 
 type ProductDetail = {
   slug: string;

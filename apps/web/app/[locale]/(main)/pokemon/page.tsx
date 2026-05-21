@@ -1,8 +1,8 @@
 import { getTranslations } from "next-intl/server";
 import type { ReactElement } from "react";
-import { SectionHeading } from "../../../components/ui/SectionHeading";
-import { Link } from "../../../i18n/navigation";
-import { apiFetch } from "../../../lib/api";
+import { SectionHeading } from "../../../../components/ui/SectionHeading";
+import { Link } from "../../../../i18n/navigation";
+import { apiFetch } from "../../../../lib/api";
 
 type Pokemon = {
   slug: string;

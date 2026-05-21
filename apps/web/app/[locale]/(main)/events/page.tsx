@@ -1,9 +1,9 @@
 import { getTranslations } from "next-intl/server";
 import type { ReactElement } from "react";
-import { Link } from "../../../i18n/navigation";
-import { SectionHeading } from "../../../components/ui/SectionHeading";
-import { apiFetch } from "../../../lib/api";
-import type { EventItem } from "../../../lib/fetchers/events";
+import { Link } from "../../../../i18n/navigation";
+import { SectionHeading } from "../../../../components/ui/SectionHeading";
+import { apiFetch } from "../../../../lib/api";
+import type { EventItem } from "../../../../lib/fetchers/events";
 
 type Props = { params: { locale: string } };
 

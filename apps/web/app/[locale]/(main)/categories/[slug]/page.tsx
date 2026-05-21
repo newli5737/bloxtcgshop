@@ -1,9 +1,9 @@
 import { getTranslations } from "next-intl/server";
 import type { ReactElement } from "react";
-import { ProductCard, type CatalogProduct } from "../../../../components/product/ProductCard";
-import { SectionHeading } from "../../../../components/ui/SectionHeading";
-import { Link } from "../../../../i18n/navigation";
-import { apiFetch } from "../../../../lib/api";
+import { ProductCard, type CatalogProduct } from "../../../../../components/product/ProductCard";
+import { SectionHeading } from "../../../../../components/ui/SectionHeading";
+import { Link } from "../../../../../i18n/navigation";
+import { apiFetch } from "../../../../../lib/api";
 
 type Props = { params: { locale: string; slug: string } };
 
