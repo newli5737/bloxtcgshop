@@ -25,6 +25,10 @@ const beVietnamPro = Be_Vietnam_Pro({
 export const metadata: Metadata = {
   title: "BloxTCGShop — Premium TCG Marketplace",
   description: "Premium Trading Card Game marketplace — booster packs, battle decks, singles & accessories",
+  icons: {
+    icon: "/images/logo.svg",
+    apple: "/images/logo.png",
+  },
 };
 
 export default function RootLayout({
