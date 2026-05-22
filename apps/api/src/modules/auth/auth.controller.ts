@@ -21,7 +21,7 @@ export class AuthController {
 
   @Public()
   @Get("captcha")
-  getCaptcha(): { captchaId: string; question: string } {
+  getCaptcha(): { captchaId: string; svg: string } {
     return this.captcha.generate();
   }
 
