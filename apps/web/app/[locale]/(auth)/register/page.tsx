@@ -71,7 +71,7 @@ export default function RegisterPage(): ReactElement {
 
   // CAPTCHA state
   const [captchaId, setCaptchaId] = useState("");
-  const [captchaQuestion, setCaptchaQuestion] = useState("");
+  const [captchaSvg, setCaptchaSvg] = useState("");
   const [captchaAnswer, setCaptchaAnswer] = useState("");
   const [captchaLoading, setCaptchaLoading] = useState(false);
 
@@ -83,9 +83,9 @@ export default function RegisterPage(): ReactElement {
       const json = await res.json();
       const data = json.data ?? json;
       setCaptchaId(data.captchaId);
-      setCaptchaQuestion(data.question);
+      setCaptchaSvg(data.svg);
     } catch {
-      setCaptchaQuestion("Error loading captcha");
+      setCaptchaSvg("");
     }
     setCaptchaLoading(false);
   }, []);
@@ -167,18 +167,20 @@ export default function RegisterPage(): ReactElement {
             <div>
               <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-400">{l.captcha}</label>
               <div className="mb-2 flex items-center gap-3">
-                <div className="flex-1 rounded-xl border border-amber-500/20 bg-amber-500/5 px-4 py-3 text-center">
+                <div className="flex-1 overflow-hidden rounded-xl border border-amber-500/20 bg-[#0f1117]" style={{ minHeight: 70 }}>
                   {captchaLoading ? (
-                    <span className="text-sm text-slate-500 animate-pulse">Loading...</span>
+                    <div className="flex h-[70px] items-center justify-center">
+                      <span className="text-sm text-slate-500 animate-pulse">Loading...</span>
+                    </div>
                   ) : (
-                    <span className="font-mono text-lg font-bold text-amber-300 tracking-wide">{captchaQuestion}</span>
+                    <div dangerouslySetInnerHTML={{ __html: captchaSvg }} className="flex items-center justify-center [&>svg]:w-full [&>svg]:h-auto" />
                   )}
                 </div>
                 <button
                   type="button"
                   onClick={loadCaptcha}
                   disabled={captchaLoading}
-                  className="flex h-[46px] w-[46px] shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] text-lg text-slate-400 transition hover:border-cyan-400/30 hover:text-cyan-300 disabled:opacity-50"
+                  className="flex h-[70px] w-[46px] shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] text-lg text-slate-400 transition hover:border-cyan-400/30 hover:text-cyan-300 disabled:opacity-50"
                   title={l.refresh}
                 >
                   🔄
