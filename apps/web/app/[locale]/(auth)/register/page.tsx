@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback, type ReactElement } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
-import { apiMutate } from "../../../../lib/api";
+import { apiGet, apiMutate } from "../../../../lib/api";
 
 const t: Record<string, Record<string, string>> = {
   ja: {
@@ -52,10 +52,10 @@ const t: Record<string, Record<string, string>> = {
   },
 };
 
-const apiBase =
-  typeof window !== "undefined"
-    ? (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3041/v1")
-    : "http://localhost:3041/v1";
+type CaptchaData = { captchaId: string; svg: string };
+
+const inputClass =
+  "w-full rounded-xl border border-white/10 bg-[#0f1117] px-4 py-3 text-sm text-white placeholder-slate-600 focus:border-cyan-500/50 focus:outline-none focus:ring-1 focus:ring-cyan-500/30 transition";
 
 export default function RegisterPage(): ReactElement {
   const router = useRouter();
@@ -69,7 +69,6 @@ export default function RegisterPage(): ReactElement {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // CAPTCHA state
   const [captchaId, setCaptchaId] = useState("");
   const [captchaSvg, setCaptchaSvg] = useState("");
   const [captchaAnswer, setCaptchaAnswer] = useState("");
@@ -79,9 +78,7 @@ export default function RegisterPage(): ReactElement {
     setCaptchaLoading(true);
     setCaptchaAnswer("");
     try {
-      const res = await fetch(`${apiBase}/auth/captcha`);
-      const json = await res.json();
-      const data = json.data ?? json;
+      const data = await apiGet<CaptchaData>("auth/captcha");
       setCaptchaId(data.captchaId);
       setCaptchaSvg(data.svg);
     } catch {
@@ -90,9 +87,7 @@ export default function RegisterPage(): ReactElement {
     setCaptchaLoading(false);
   }, []);
 
-  useEffect(() => {
-    loadCaptcha();
-  }, [loadCaptcha]);
+  useEffect(() => { loadCaptcha(); }, [loadCaptcha]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -113,15 +108,11 @@ export default function RegisterPage(): ReactElement {
       router.push("/login");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Registration failed");
-      // Reload captcha on error (used captcha is invalidated)
       loadCaptcha();
     } finally {
       setLoading(false);
     }
   };
-
-  const inputClass =
-    "w-full rounded-xl border border-white/10 bg-[#0f1117] px-4 py-3 text-sm text-white placeholder-slate-600 focus:border-cyan-500/50 focus:outline-none focus:ring-1 focus:ring-cyan-500/30 transition";
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-[#0a0b10] px-4">
