@@ -23,10 +23,10 @@ export function AdminCard({ children, className = "" }: { children: ReactNode; c
 }
 
 // ─── Modal Dialog ───
-export function Modal({ open, onClose, title, children, wide }: { open: boolean; onClose: () => void; title: string; children: ReactNode; wide?: boolean }): ReactElement | null {
+export function Modal({ open, onClose, title, children, wide, zIndex }: { open: boolean; onClose: () => void; title: string; children: ReactNode; wide?: boolean; zIndex?: number }): ReactElement | null {
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center pt-[5vh] pb-[5vh]" onClick={onClose}>
+    <div className="fixed inset-0 flex items-start justify-center pt-[5vh] pb-[5vh]" style={{ zIndex: zIndex ?? 50 }} onClick={onClose}>
       {/* Backdrop */}
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
       {/* Dialog */}

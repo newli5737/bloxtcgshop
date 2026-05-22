@@ -54,7 +54,7 @@ function ConfirmModal({ open, title, message, onConfirm, onCancel, variant = "de
 }): ReactElement | null {
   if (!open) return null;
   return (
-    <Modal open={open} onClose={onCancel} title={title}>
+    <Modal open={open} onClose={onCancel} title={title} zIndex={60}>
       <p className="text-sm text-slate-300 leading-relaxed whitespace-pre-line">{message}</p>
       <div className="mt-5 flex gap-3 border-t border-white/[0.06] pt-5">
         <button onClick={onConfirm}
