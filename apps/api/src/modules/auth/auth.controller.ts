@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Req, Res } from "@nestjs/common";
+import { BadRequestException, Body, Controller, Get, Post, Req, Res } from "@nestjs/common";
 import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
 import { Response, Request } from "express";
 import { ConfigService } from "@nestjs/config";
@@ -6,6 +6,7 @@ import { Role } from "@pokemart/database";
 import { CurrentUser, type AuthUser } from "../../common/decorators/current-user.decorator";
 import { Public } from "../../common/decorators/public.decorator";
 import { AuthService, type TokenPair } from "./auth.service";
+import { CaptchaService } from "./captcha.service";
 import { LoginDto } from "./dto/login.dto";
 import { RegisterDto } from "./dto/register.dto";
 
@@ -15,11 +16,22 @@ export class AuthController {
   constructor(
     private readonly auth: AuthService,
     private readonly config: ConfigService,
+    private readonly captcha: CaptchaService,
   ) {}
+
+  @Public()
+  @Get("captcha")
+  getCaptcha(): { captchaId: string; question: string } {
+    return this.captcha.generate();
+  }
 
   @Public()
   @Post("register")
   register(@Body() dto: RegisterDto): Promise<{ user: { id: string; email: string; name: string | null; role: Role } }> {
+    const valid = this.captcha.verify(dto.captchaId, dto.captchaAnswer);
+    if (!valid) {
+      throw new BadRequestException("CAPTCHA không đúng hoặc đã hết hạn. Vui lòng thử lại.");
+    }
     return this.auth.register(dto);
   }
 

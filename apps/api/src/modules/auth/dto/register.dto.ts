@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsEmail, IsString, MinLength } from "class-validator";
+import { IsEmail, IsInt, IsString, MinLength } from "class-validator";
 
 export class RegisterDto {
   @ApiProperty()
@@ -15,4 +15,12 @@ export class RegisterDto {
   @IsString()
   @MinLength(2)
   name!: string;
+
+  @ApiProperty()
+  @IsString()
+  captchaId!: string;
+
+  @ApiProperty()
+  @IsInt()
+  captchaAnswer!: number;
 }
