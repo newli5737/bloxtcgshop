@@ -5,6 +5,8 @@ import { SectionHeading } from "../../../../components/ui/SectionHeading";
 import { apiFetch } from "../../../../lib/api";
 import type { EventItem } from "../../../../lib/fetchers/events";
 
+export const dynamic = "force-dynamic";
+
 type Props = { params: { locale: string } };
 
 const statusColors: Record<string, string> = {

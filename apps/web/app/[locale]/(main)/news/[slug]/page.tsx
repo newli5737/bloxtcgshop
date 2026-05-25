@@ -3,6 +3,8 @@ import type { ReactElement } from "react";
 import { Link } from "../../../../../i18n/navigation";
 import { apiFetch } from "../../../../../lib/api";
 
+export const dynamic = "force-dynamic";
+
 type NewsDetail = {
   slug: string;
   publishedAt: string;

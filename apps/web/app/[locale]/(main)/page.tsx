@@ -5,7 +5,7 @@ import { SectionHeading } from "../../../components/ui/SectionHeading";
 import { Link } from "../../../i18n/navigation";
 import { apiFetch } from "../../../lib/api";
 
-export const revalidate = 10;
+export const dynamic = "force-dynamic";
 
 type Banner = {
   id: string;

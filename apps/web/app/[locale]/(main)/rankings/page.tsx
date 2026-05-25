@@ -5,6 +5,8 @@ import { Link } from "../../../../i18n/navigation";
 import { apiFetch } from "../../../../lib/api";
 import type { CatalogProduct } from "../../../../components/product/ProductCard";
 
+export const dynamic = "force-dynamic";
+
 type Props = { params: { locale: string } };
 
 export default async function RankingsPage({ params }: Props): Promise<ReactElement> {
