@@ -3,6 +3,9 @@ import type { ReactElement } from "react";
 import { Link } from "../../../../../i18n/navigation";
 import { apiFetch } from "../../../../../lib/api";
 
+/** Always fetch fresh data for product detail — prevents stale RSC cache on client navigation */
+export const dynamic = "force-dynamic";
+
 type ProductDetail = {
   slug: string;
   name: string;
