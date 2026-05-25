@@ -36,6 +36,7 @@ export function ProductCard({ product, locale }: Props): ReactElement {
   return (
     <Link
       href={`/products/${product.slug}`}
+      prefetch={false}
       className="group relative flex flex-col overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.04] shadow-card backdrop-blur-sm transition duration-300 hover:-translate-y-1 hover:border-cyan-400/25 hover:shadow-card-hover"
     >
       {/* Holographic shine overlay on hover */}

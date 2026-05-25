@@ -212,6 +212,7 @@ export default async function HomePage({ params }: Props): Promise<ReactElement>
                 <Link
                   key={p.slug}
                   href={`/products/${p.slug}`}
+                  prefetch={false}
                   className={`relative flex flex-col items-center text-center ${heights}`}
                 >
                   <div
@@ -240,6 +241,7 @@ export default async function HomePage({ params }: Props): Promise<ReactElement>
             <li key={p.slug}>
               <Link
                 href={`/products/${p.slug}`}
+                prefetch={false}
                 className="flex items-center gap-4 rounded-2xl border border-transparent bg-white/[0.03] px-3 py-2.5 transition hover:border-cyan-400/20 hover:bg-white/[0.06] hover:shadow-md"
               >
                 <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-surface-300 font-display text-sm font-bold text-slate-400">
